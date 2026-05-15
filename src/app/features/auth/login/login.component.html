@@ -1,0 +1,232 @@
+<div
+  class="login-root relative flex min-h-screen flex-col overflow-hidden lg:flex-row"
+>
+  <!-- Hero imagen: visible en móvil arriba y en el panel izquierdo escritorio -->
+  <div
+    class="relative h-44 shrink-0 overflow-hidden lg:hidden"
+    aria-hidden="true"
+  >
+    <img
+      class="absolute inset-0 h-full w-full scale-110 object-cover object-[55%_42%]"
+      src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1200&q=85"
+      alt=""
+      width="1200"
+      height="800"
+      decoding="async"
+    />
+    <div
+      class="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/55 to-brand-950/25"
+    ></div>
+    <div
+      class="login-hero-noise pointer-events-none absolute inset-0 opacity-[0.12]"
+    ></div>
+  </div>
+
+  <!-- Panel marca (desktop) -->
+  <div
+    class="relative hidden min-h-screen flex-1 flex-col justify-between overflow-x-clip bg-gradient-to-br from-surface-900 via-surface-950 to-black p-10 lg:flex lg:max-w-[46%]"
+  >
+    <!-- Capa foto + máscara diagonal -->
+    <div class="login-hero-media pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <img
+        class="login-hero-img absolute left-1/2 top-1/2 min-h-full min-w-full object-cover object-[48%_center]"
+        src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1800&q=88"
+        alt=""
+        width="1800"
+        height="1200"
+        decoding="async"
+        fetchpriority="high"
+      />
+      <div
+        class="absolute inset-0 bg-gradient-to-br from-surface-950 via-surface-950/88 to-emerald-950/50 mix-blend-multiply"
+      ></div>
+      <div
+        class="absolute inset-0 bg-gradient-to-tr from-transparent via-brand-600/15 to-accent-500/25"
+      ></div>
+      <div
+        class="absolute -right-1/4 bottom-0 h-[55%] w-[90%] rounded-tl-[3rem] border border-white/10 bg-surface-950/20 shadow-[0_-30px_80px_-20px_rgba(0,0,0,0.75)] backdrop-blur-[2px]"
+        style="clip-path: polygon(12% 18%, 100% 0, 100% 100%, 0 100%)"
+      ></div>
+    </div>
+
+    <div
+      class="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-brand-500/25 blur-3xl"
+    ></div>
+    <div
+      class="pointer-events-none absolute bottom-0 left-1/4 h-72 w-72 rounded-full bg-accent-500/20 blur-3xl"
+    ></div>
+
+    <!-- Marco flotante “polaroid” (solo desktop) -->
+    <figure
+      class="login-float-frame pointer-events-none absolute bottom-[20%] right-4 z-20 hidden w-[min(48%,260px)] rotate-[3deg] lg:block"
+      aria-hidden="true"
+    >
+      <div
+        class="rounded-lg border border-white/20 bg-white/5 p-2 shadow-2xl shadow-black/60 ring-1 ring-brand-400/30 backdrop-blur-sm"
+      >
+        <div class="overflow-hidden rounded-md">
+          <img
+            class="h-36 w-full object-cover object-[80%_35%] contrast-[1.08] saturate-[1.15]"
+            src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=640&h=420&q=82"
+            alt=""
+            width="600"
+            height="400"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <figcaption
+          class="mt-2 px-1 text-center font-display text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-200/90"
+        >
+          Taller en marcha
+        </figcaption>
+      </div>
+    </figure>
+
+    <div class="relative z-10">
+      <div class="flex items-center gap-3">
+        <div
+          class="flex h-12 w-[5rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1.5 ring-1 ring-white/30 shadow-lg shadow-black/30"
+        >
+          <img
+            src="johan-bikes-logo.png"
+            alt=""
+            width="200"
+            height="105"
+            class="h-9 w-full object-contain object-center"
+            decoding="async"
+          />
+        </div>
+        <div>
+          <p class="font-display text-xl font-bold tracking-tight text-white">BikeRidden</p>
+          <p class="text-sm text-slate-400">CRM para talleres de bicicletas</p>
+        </div>
+      </div>
+      <h2 class="mt-14 max-w-md font-display text-4xl font-bold leading-tight text-white md:text-5xl">
+        Control total del taller, sin complicarte la vida.
+      </h2>
+      <p class="mt-6 max-w-md text-base leading-relaxed text-slate-400">
+        Órdenes, clientes, bicicletas y tablero en vivo. Los datos de acceso demo están listos para que pruebes el flujo
+        mientras conectamos tus servicios reales.
+      </p>
+    </div>
+
+    <div class="relative z-10 flex flex-col gap-2">
+      <p class="text-xs text-slate-600">© BikeRidden — prototipo UI</p>
+      <a
+        class="w-fit text-[11px] text-slate-500 underline decoration-slate-600 underline-offset-2 transition hover:text-brand-400 hover:decoration-brand-400/60"
+        href="https://unsplash.com/license"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Fotografía vía Unsplash — licencia abierta
+      </a>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div
+    class="relative flex flex-1 items-center justify-center bg-surface-950 px-4 py-12 lg:bg-gradient-to-tl lg:from-surface-950 lg:via-surface-900/30 lg:to-surface-950"
+  >
+    <div
+      class="w-full max-w-md rounded-2xl border border-surface-700/80 bg-surface-900/90 p-8 shadow-2xl shadow-black/40 backdrop-blur-xl"
+    >
+      <div class="mb-8 lg:hidden">
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-11 w-[4.5rem] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1 ring-1 ring-surface-600/40"
+          >
+            <img
+              src="johan-bikes-logo.png"
+              alt=""
+              width="200"
+              height="105"
+              class="h-8 w-full object-contain object-center"
+              decoding="async"
+            />
+          </div>
+          <div>
+            <h1 class="font-display text-lg font-bold text-white">BikeRidden</h1>
+            <p class="text-xs text-slate-500">Inicia sesión</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-8 hidden lg:block">
+        <h1 class="font-display text-2xl font-bold text-white">Bienvenido de vuelta</h1>
+        <p class="mt-2 text-sm text-slate-400">Entra con la cuenta demo o cambia los datos cuando quieras.</p>
+      </div>
+
+      <form class="space-y-5" (ngSubmit)="submit()" [formGroup]="form" novalidate>
+        <div>
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500" for="email"
+            >Correo</label
+          >
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            autocomplete="username"
+            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3.5 text-sm text-white shadow-inner outline-none ring-0 transition placeholder:text-slate-600 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            placeholder="tu@taller.com"
+          />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <p class="mt-1 text-xs text-red-400">Introduce un correo válido.</p>
+          }
+        </div>
+        <div>
+          <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500" for="password"
+            >Contraseña</label
+          >
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3.5 text-sm text-white shadow-inner outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+          />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <p class="mt-1 text-xs text-red-400">Mínimo 6 caracteres.</p>
+          }
+        </div>
+
+        @if (errorMessage) {
+          <p
+            class="rounded-xl border border-red-500/35 bg-red-950/50 px-4 py-3 text-sm text-red-100"
+            role="alert"
+          >
+            {{ errorMessage }}
+          </p>
+        }
+
+        <button
+          type="submit"
+          class="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-brand-500 via-brand-500 to-emerald-600 py-3.5 text-sm font-bold text-surface-950 shadow-lg shadow-brand-900/30 transition hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="submitting"
+        >
+          @if (submitting) {
+            <span class="flex items-center gap-2">
+              <span
+                class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-surface-950 border-t-transparent"
+              ></span>
+              Ingresando…
+            </span>
+          } @else {
+            <span>Entrar al taller</span>
+          }
+        </button>
+      </form>
+
+      <div
+        class="mt-8 rounded-xl border border-brand-500/20 bg-brand-950/30 p-4 text-center text-xs leading-relaxed text-slate-300"
+      >
+        <p class="font-medium text-brand-200">Acceso administrador (demo)</p>
+        <p class="mt-2 font-mono text-[13px] text-white">
+          {{ demoEmail }}
+          <span class="text-slate-500">·</span>
+          demo1234
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

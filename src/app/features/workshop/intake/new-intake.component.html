@@ -1,0 +1,214 @@
+<section class="mx-auto max-w-3xl space-y-8">
+  <header class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-wider text-brand-400">Recepción</p>
+      <h1 class="mt-1 font-display text-3xl font-bold text-white">Nueva entrada al taller</h1>
+      <p class="mt-2 max-w-xl text-sm text-slate-400">
+        Registra al cliente, su bicicleta y el trabajo solicitado. Se crea una orden en estado
+        <span class="font-medium text-slate-200">Ingreso</span> para seguir el flujo en el taller.
+      </p>
+    </div>
+    <a
+      routerLink="/app/ordenes"
+      class="shrink-0 rounded-xl border border-surface-600 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+    >
+      Ver órdenes
+    </a>
+  </header>
+
+  <form class="space-y-8" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <!-- Cliente -->
+    <fieldset class="rounded-2xl border border-surface-700 bg-surface-900/50 p-6 shadow-lg shadow-black/20">
+      <legend class="font-display text-lg font-semibold text-white">Cliente</legend>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="nm"
+            >Nombre completo</label
+          >
+          <input
+            id="nm"
+            type="text"
+            formControlName="customerFullName"
+            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            autocomplete="name"
+          />
+          @if (form.controls.customerFullName.touched && form.controls.customerFullName.invalid) {
+            <p class="mt-1 text-xs text-red-400">Indica al menos 2 caracteres.</p>
+          }
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="ph"
+            >Teléfono</label
+          >
+          <input
+            id="ph"
+            type="tel"
+            formControlName="customerPhone"
+            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            autocomplete="tel"
+          />
+          @if (form.controls.customerPhone.touched && form.controls.customerPhone.invalid) {
+            <p class="mt-1 text-xs text-red-400">Teléfono obligatorio (mín. 8 dígitos/caracteres).</p>
+          }
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="em"
+            >Correo (opcional)</label
+          >
+          <input
+            id="em"
+            type="email"
+            formControlName="customerEmail"
+            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            autocomplete="email"
+          />
+          @if (form.controls.customerEmail.touched && form.controls.customerEmail.invalid) {
+            <p class="mt-1 text-xs text-red-400">Correo no válido.</p>
+          }
+        </div>
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="nt"
+            >Notas (opcional)</label
+          >
+          <textarea
+            id="nt"
+            rows="2"
+            formControlName="customerNotes"
+            class="w-full resize-y rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            placeholder="Ej. horario preferido, alergias, urgencia…"
+          ></textarea>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="rounded-2xl border border-surface-700 bg-surface-900/50 p-6 shadow-lg shadow-black/20">
+      <legend class="font-display text-lg font-semibold text-white">Recepción en taller</legend>
+      <p class="mt-1 text-xs text-slate-500">
+        Quien recibe la bicicleta del cliente en este momento (queda guardado en la orden y en el historial del
+        cliente).
+      </p>
+      <div class="mt-4">
+        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="recv">
+          Nombre del mecánico o recepcionista
+        </label>
+        <input
+          id="recv"
+          type="text"
+          formControlName="receivedByMechanicName"
+          class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+          placeholder="Ej. María Vega"
+          autocomplete="name"
+        />
+        @if (form.controls.receivedByMechanicName.touched && form.controls.receivedByMechanicName.invalid) {
+          <p class="mt-1 text-xs text-red-400">Indica quién recibe la unidad (mín. 2 caracteres).</p>
+        }
+      </div>
+    </fieldset>
+
+    <!-- Bicicleta -->
+    <fieldset class="rounded-2xl border border-surface-700 bg-surface-900/50 p-6 shadow-lg shadow-black/20">
+      <legend class="font-display text-lg font-semibold text-white">Bicicleta</legend>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="br"
+            >Marca</label
+          >
+          <input
+            id="br"
+            type="text"
+            formControlName="bikeBrand"
+            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+          />
+          @if (form.controls.bikeBrand.touched && form.controls.bikeBrand.invalid) {
+            <p class="mt-1 text-xs text-red-400">Marca obligatoria.</p>
+          }
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="md"
+            >Modelo</label
+          >
+          <input
+            id="md"
+            type="text"
+            formControlName="bikeModel"
+            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+          />
+          @if (form.controls.bikeModel.touched && form.controls.bikeModel.invalid) {
+            <p class="mt-1 text-xs text-red-400">Modelo obligatorio.</p>
+          }
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="sn"
+            >N.º de serie (opcional)</label
+          >
+          <input
+            id="sn"
+            type="text"
+            formControlName="bikeSerial"
+            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="cat"
+            >Tipo</label
+          >
+          <select
+            id="cat"
+            formControlName="bikeCategory"
+            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+          >
+            @for (c of categories; track c.value) {
+              <option [value]="c.value">{{ c.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- Proceso -->
+    <fieldset class="rounded-2xl border border-surface-700 bg-surface-900/50 p-6 shadow-lg shadow-black/20">
+      <legend class="font-display text-lg font-semibold text-white">Trabajo a realizar</legend>
+      <p class="mt-1 text-xs text-slate-500">
+        Describe lo que el cliente pide: servicio, avería, repuestos estimados, etc. Esto queda como resumen de la
+        orden.
+      </p>
+      <div class="mt-4">
+        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="pr"
+          >Detalle del proceso</label
+        >
+        <textarea
+          id="pr"
+          rows="4"
+          formControlName="processDescription"
+          class="w-full resize-y rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+          placeholder="Ej. Ajuste de frenos de disco, cambio de pastillas delanteras, revisión de transmisión…"
+        ></textarea>
+        @if (form.controls.processDescription.touched && form.controls.processDescription.invalid) {
+          <p class="mt-1 text-xs text-red-400">Describe el trabajo con al menos 8 caracteres.</p>
+        }
+      </div>
+    </fieldset>
+
+    @if (errorMessage) {
+      <p class="rounded-xl border border-red-500/35 bg-red-950/40 px-4 py-3 text-sm text-red-100" role="alert">
+        {{ errorMessage }}
+      </p>
+    }
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+      <a
+        routerLink="/app/panel"
+        class="inline-flex justify-center rounded-xl border border-surface-600 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-white"
+      >
+        Cancelar
+      </a>
+      <button
+        type="submit"
+        class="inline-flex justify-center rounded-xl bg-gradient-to-r from-brand-500 to-emerald-600 px-6 py-3 text-sm font-bold text-surface-950 shadow-lg shadow-brand-900/25 transition hover:brightness-110 disabled:opacity-50"
+        [disabled]="submitting"
+      >
+        {{ submitting ? 'Guardando…' : 'Registrar y crear orden' }}
+      </button>
+    </div>
+  </form>
+</section>

@@ -1,0 +1,202 @@
+<section class="space-y-8">
+  <header class="space-y-2">
+    <h1 class="font-display text-3xl font-bold text-white">Artículos en bodega</h1>
+    <p class="max-w-3xl text-slate-400">
+      Inventario de <span class="text-slate-200">bicicletas completas</span> y
+      <span class="text-slate-200">repuestos</span> listos para venta o traslado. Las fotos de ejemplo vienen de
+      internet; cuando tengas tu lote, sustituye URLs o sube archivos al publicar.
+    </p>
+  </header>
+
+  <div class="grid gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="space-y-4">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Filtrar</span>
+        <button type="button" [class]="filterPillClass('todos')" (click)="setFilter('todos')">
+          Todos ({{ listings().length }})
+        </button>
+        <button
+          type="button"
+          [class]="filterPillClass('bicicleta_completa')"
+          (click)="setFilter('bicicleta_completa')"
+        >
+          Bicicletas
+        </button>
+        <button type="button" [class]="filterPillClass('repuesto')" (click)="setFilter('repuesto')">
+          Repuestos
+        </button>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        @for (item of filteredList(); track item.id) {
+          <article
+            class="flex flex-col overflow-hidden rounded-2xl border border-surface-700 bg-surface-900/50 shadow-sm"
+          >
+            <div class="relative aspect-[4/3] bg-surface-800">
+              <img
+                [src]="imageSrc(item)"
+                [alt]="item.title"
+                class="h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
+                referrerpolicy="no-referrer"
+                (error)="onImageError(item.id)"
+              />
+              <span
+                class="absolute left-2 top-2 rounded-full bg-surface-950/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-200 ring-1 ring-brand-500/30"
+              >
+                {{ kindLabel(item.kind) }}
+              </span>
+            </div>
+            <div class="flex flex-1 flex-col gap-2 p-4">
+              <h2 class="font-display text-lg font-semibold leading-snug text-white">{{ item.title }}</h2>
+              <p class="line-clamp-3 flex-1 text-sm text-slate-400">{{ item.description }}</p>
+              <div class="flex flex-wrap items-end justify-between gap-2 border-t border-surface-700 pt-3">
+                <div>
+                  <p class="text-[10px] uppercase text-slate-500">Precio</p>
+                  <p class="text-lg font-bold text-emerald-300">
+                    {{ item.priceMxn | number: '1.0-0' }} <span class="text-sm font-medium text-slate-400">MXN</span>
+                  </p>
+                  <p class="text-[10px] text-slate-500">Publicado {{ item.listedAt }}</p>
+                </div>
+                <button
+                  type="button"
+                  class="rounded-lg border border-surface-600 px-2 py-1 text-[11px] text-slate-400 hover:border-rose-500/40 hover:text-rose-300"
+                  (click)="remove(item.id)"
+                >
+                  Quitar
+                </button>
+              </div>
+            </div>
+          </article>
+        } @empty {
+          <p
+            class="col-span-full rounded-xl border border-dashed border-surface-600 py-12 text-center text-sm text-slate-500"
+          >
+            No hay artículos con este filtro.
+          </p>
+        }
+      </div>
+    </div>
+
+    <aside
+      class="space-y-4 rounded-2xl border border-surface-700 bg-surface-900/60 p-5 xl:sticky xl:top-4 xl:self-start"
+    >
+      <h2 class="font-display text-lg font-semibold text-white">Publicar artículo</h2>
+      <p class="text-xs text-slate-500">
+        Imagen: pega una URL pública (Unsplash, tu CDN…) o sube un archivo (máx. 2 MB). Los datos viven en memoria
+        hasta conectar API.
+      </p>
+
+      @if (formError(); as err) {
+        <div class="rounded-lg border border-rose-500/40 bg-rose-950/40 px-3 py-2 text-xs text-rose-100" role="alert">
+          {{ err }}
+        </div>
+      }
+
+      <form class="space-y-3" (ngSubmit)="submitListing()">
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase text-slate-500" for="sh-kind">Tipo</label>
+          <select
+            id="sh-kind"
+            name="kind"
+            class="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            [ngModel]="formKind()"
+            (ngModelChange)="formKind.set($event)"
+          >
+            <option [ngValue]="'repuesto'">Repuesto</option>
+            <option [ngValue]="'bicicleta_completa'">Bicicleta completa</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase text-slate-500" for="sh-title">Título</label>
+          <input
+            id="sh-title"
+            name="title"
+            type="text"
+            class="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            placeholder="Ej. Rueda trasera 29 boost"
+            [(ngModel)]="formTitle"
+            autocomplete="off"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase text-slate-500" for="sh-desc">
+            Descripción
+          </label>
+          <textarea
+            id="sh-desc"
+            name="description"
+            rows="4"
+            class="w-full resize-y rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            placeholder="Estado, compatibilidad, lo que incluye…"
+            [(ngModel)]="formDescription"
+          ></textarea>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase text-slate-500" for="sh-price">
+            Precio (MXN)
+          </label>
+          <input
+            id="sh-price"
+            name="price"
+            type="number"
+            min="0"
+            step="1"
+            class="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            placeholder="0"
+            [(ngModel)]="formPriceMxn"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase text-slate-500" for="sh-url">
+            URL de imagen (opcional si subes archivo)
+          </label>
+          <input
+            id="sh-url"
+            name="imageUrl"
+            type="url"
+            class="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            placeholder="https://…"
+            [(ngModel)]="formImageUrl"
+            autocomplete="off"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase text-slate-500" for="sh-file">
+            O subir imagen
+          </label>
+          <input
+            id="sh-file"
+            type="file"
+            accept="image/*"
+            class="block w-full text-xs text-slate-400 file:mr-2 file:rounded-lg file:border-0 file:bg-brand-500/20 file:px-3 file:py-2 file:text-xs file:font-medium file:text-brand-100 hover:file:bg-brand-500/30"
+            (change)="onPickImage($event)"
+            [disabled]="formBusy()"
+          />
+          @if (formFileName(); as fn) {
+            <p class="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+              <span class="truncate">{{ fn }}</span>
+              <button type="button" class="shrink-0 text-brand-300 underline" (click)="clearPickedFile()">
+                Quitar archivo
+              </button>
+            </p>
+          }
+        </div>
+
+        <button
+          type="submit"
+          class="w-full rounded-xl bg-gradient-to-r from-brand-500 to-accent-500 py-2.5 text-sm font-semibold text-surface-950 shadow transition hover:opacity-95 disabled:opacity-50"
+          [disabled]="formBusy()"
+        >
+          Añadir al catálogo
+        </button>
+      </form>
+    </aside>
+  </div>
+</section>

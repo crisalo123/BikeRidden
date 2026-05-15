@@ -1,0 +1,220 @@
+<div class="agenda-page">
+  <div class="agenda-inner space-y-8 p-6 md:p-10">
+    <header class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <p class="agenda-kicker">Taller · planificación</p>
+        <h1 class="agenda-title font-display text-4xl font-black tracking-tight md:text-5xl">Agenda rodante</h1>
+        <p class="agenda-sub">
+          Vista semanal viva: seguimientos a prospectos, citas internas, entregas previstas y órdenes en curso con el
+          tiempo que llevan en proceso. Pensado para un taller de bicis con ritmo real.
+          <span class="mt-2 block text-emerald-100/90">Pulsa cualquier bloque del calendario para ver el detalle en un modal.</span>
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button type="button" class="agenda-btn agenda-btn--ghost" (click)="prevWeek()">← Semana ant.</button>
+        <button type="button" class="agenda-btn agenda-btn--accent" (click)="thisWeek()">Esta semana</button>
+        <button type="button" class="agenda-btn agenda-btn--ghost" (click)="nextWeek()">Semana sig. →</button>
+      </div>
+    </header>
+
+    <p class="agenda-range">{{ weekRangeTitle() }}</p>
+
+    <div class="agenda-week">
+      @for (d of weekDays(); track d.getTime()) {
+        <div class="agenda-day">
+          <div class="agenda-day-head">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-200/80">{{ dayShort(d) }}</p>
+            <p class="font-display text-2xl font-black text-white">{{ dayNum(d) }}</p>
+          </div>
+          <div class="agenda-day-chips">
+            @for (c of chipsForDay(d); track c.id) {
+              <button type="button" [class]="chipToneClass(c.tone)" (click)="openChip(c)">
+                <p class="font-semibold text-slate-50">{{ c.title }}</p>
+                <p class="text-[10px] text-slate-400">{{ c.subtitle }}</p>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-3">
+      <div class="agenda-panel agenda-panel--wide xl:col-span-2">
+        <h2 class="font-display">Órdenes en curso</h2>
+        <p class="mt-1 text-xs text-slate-400">
+          Tiempo desde que avanzó de ingreso (o desde la apertura si sigue en ingreso).
+        </p>
+        <div class="mt-4 space-y-3">
+          @for (o of activeOrders(); track o.id) {
+            <div class="agenda-order-card flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="font-mono text-xs text-emerald-300">{{ o.code }}</p>
+                <p class="text-sm font-medium text-slate-100">{{ registry.customerName(o.customerId) }}</p>
+                <p class="text-xs text-slate-500">{{ registry.bikeSummary(o.bikeId) }}</p>
+                <p class="mt-1 text-[10px] text-slate-500">
+                  Abierta {{ o.openedAt }} · {{ statusLabel(o.status) }}
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">En taller</p>
+                <p class="text-xl font-black tabular-nums text-emerald-300">
+                  {{ registry.maintenanceDurationLabel(o) }}
+                </p>
+                <p class="text-[10px] text-slate-500">
+                  desde {{ registry.formatWorkshopDateTime(registry.inWorkshopSinceIso(o)) }}
+                </p>
+              </div>
+            </div>
+          } @empty {
+            <p class="text-sm text-slate-500">No hay órdenes abiertas.</p>
+          }
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="agenda-panel">
+          <h2 class="font-display">Clientes potenciales</h2>
+          <ul class="mt-3 space-y-3">
+            @for (lead of leads(); track lead.id) {
+              <li class="agenda-lead-card text-xs">
+                <p class="font-semibold text-white">{{ lead.fullName }}</p>
+                <p class="text-slate-400">{{ lead.phone }}</p>
+                @if (lead.email) {
+                  <p class="text-slate-500">{{ lead.email }}</p>
+                }
+                <p class="mt-1 text-[10px] font-bold uppercase tracking-wide text-violet-200">
+                  Seguimiento {{ lead.followUpDate }}
+                </p>
+                @if (lead.notes) {
+                  <p class="mt-1 text-slate-500">{{ lead.notes }}</p>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+
+        <div class="agenda-panel">
+          <h2 class="font-display">Próximas entregas</h2>
+          <ul class="mt-3 space-y-2 text-xs">
+            @for (u of upcomingMaintenance(); track u.order.id) {
+              <li
+                class="flex justify-between gap-2 border-b border-slate-700/80 py-2 font-medium last:border-0 text-slate-200"
+              >
+                <span class="font-mono text-emerald-300">{{ u.order.code }}</span>
+                <span class="text-slate-400">{{ u.when }}</span>
+              </li>
+            } @empty {
+              <li class="text-slate-500">Sin fechas estimadas próximas.</li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  @if (modalPayload(); as m) {
+    <div class="agenda-modal-root" (click)="closeModal()" role="presentation">
+      <div
+        class="agenda-modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="agenda-modal-title"
+        (click)="$event.stopPropagation()"
+      >
+        <button type="button" class="agenda-modal-close" (click)="closeModal()" aria-label="Cerrar detalle">
+          <span aria-hidden="true">×</span>
+        </button>
+
+        @switch (m.kind) {
+          @case ('order') {
+            <div class="agenda-modal-hero agenda-modal-hero--bike">
+              <span class="agenda-modal-hero-glyph" aria-hidden="true">🚴</span>
+              <div>
+                <p class="agenda-modal-kicker">Orden de taller</p>
+                <h2 id="agenda-modal-title" class="agenda-modal-title">{{ m.order.code }}</h2>
+                <p class="agenda-modal-eyebrow">{{ statusLabel(m.order.status) }}</p>
+              </div>
+            </div>
+            <div class="agenda-modal-body">
+              <section class="agenda-modal-block">
+                <h3 class="agenda-modal-label">Fecha de entrega estimada</h3>
+                <p class="agenda-modal-highlight">{{ deliverySummary(m.order) }}</p>
+              </section>
+              <section class="agenda-modal-block">
+                <h3 class="agenda-modal-label">Cliente</h3>
+                <p class="agenda-modal-value">
+                  {{ m.customer?.fullName ?? registry.customerName(m.order.customerId) }}
+                </p>
+                @if (m.customer; as cust) {
+                  <p class="agenda-modal-meta">{{ cust.phone }}</p>
+                  <p class="agenda-modal-meta">{{ cust.email }}</p>
+                } @else {
+                  <p class="agenda-modal-meta text-slate-500">Sin ficha de contacto en demo.</p>
+                }
+              </section>
+              <section class="agenda-modal-block">
+                <h3 class="agenda-modal-label">Bicicleta</h3>
+                <p class="agenda-modal-value">{{ registry.bikeSummary(m.order.bikeId) }}</p>
+              </section>
+              <section class="agenda-modal-block">
+                <h3 class="agenda-modal-label">Resumen del trabajo</h3>
+                <p class="agenda-modal-prose">{{ m.order.summary }}</p>
+              </section>
+              <section class="agenda-modal-block agenda-modal-block--accent">
+                <h3 class="agenda-modal-label">Hallazgos / proceso</h3>
+                <p class="agenda-modal-prose">{{ bikeWorkBlurb(m.order) }}</p>
+              </section>
+            </div>
+          }
+          @case ('lead') {
+            <div class="agenda-modal-hero agenda-modal-hero--lead">
+              <span class="agenda-modal-hero-glyph" aria-hidden="true">✦</span>
+              <div>
+                <p class="agenda-modal-kicker">Seguimiento comercial</p>
+                <h2 id="agenda-modal-title" class="agenda-modal-title">{{ m.lead.fullName }}</h2>
+                <p class="agenda-modal-eyebrow">Próximo contacto {{ formatLongYmd(m.lead.followUpDate) }}</p>
+              </div>
+            </div>
+            <div class="agenda-modal-body">
+              <section class="agenda-modal-block">
+                <h3 class="agenda-modal-label">Contacto</h3>
+                <p class="agenda-modal-value">{{ m.lead.phone }}</p>
+                @if (m.lead.email) {
+                  <p class="agenda-modal-meta">{{ m.lead.email }}</p>
+                }
+              </section>
+              @if (m.lead.notes) {
+                <section class="agenda-modal-block agenda-modal-block--accent">
+                  <h3 class="agenda-modal-label">Notas</h3>
+                  <p class="agenda-modal-prose">{{ m.lead.notes }}</p>
+                </section>
+              }
+            </div>
+          }
+          @case ('extra') {
+            <div class="agenda-modal-hero agenda-modal-hero--extra">
+              <span class="agenda-modal-hero-glyph" aria-hidden="true">◷</span>
+              <div>
+                <p class="agenda-modal-kicker">{{ extraKindLabel(m.event.kind) }}</p>
+                <h2 id="agenda-modal-title" class="agenda-modal-title">{{ m.event.title }}</h2>
+                <p class="agenda-modal-eyebrow">
+                  {{ registry.formatWorkshopDateTime(m.event.startAt) }} — {{ registry.formatWorkshopDateTime(m.event.endAt) }}
+                </p>
+              </div>
+            </div>
+            <div class="agenda-modal-body">
+              @if (m.event.notes) {
+                <section class="agenda-modal-block">
+                  <h3 class="agenda-modal-label">Detalle</h3>
+                  <p class="agenda-modal-prose">{{ m.event.notes }}</p>
+                </section>
+              } @else {
+                <p class="text-sm text-slate-500">Sin notas adicionales.</p>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }

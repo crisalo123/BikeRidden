@@ -1,0 +1,15 @@
+.drag-card {
+  cursor: grab;
+  user-select: none;
+}
+
+.drag-card:active {
+  cursor: grabbing;
+}
+
+.drop-column--active {
+  border-radius: 0.75rem;
+  outline: 2px dashed rgba(34, 197, 94, 0.55);
+  outline-offset: 2px;
+  background-color: rgba(5, 46, 22, 0.35);
+}

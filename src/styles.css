@@ -1,0 +1,79 @@
+@import 'tailwindcss';
+
+/* Angular: asegurar que Tailwind escanee plantillas y estilos (si no, el CSS casi no genera utilidades). */
+@source "./**/*.{html,ts,scss}";
+
+@theme {
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Syne', ui-sans-serif, system-ui, sans-serif;
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-400: #4ade80;
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-700: #15803d;
+  --color-brand-900: #14532d;
+  --color-brand-950: #052e16;
+  --color-surface-950: #070b12;
+  --color-surface-900: #0f1419;
+  --color-surface-800: #1a222d;
+  --color-surface-700: #243040;
+  --color-accent-400: #38bdf8;
+  --color-accent-500: #0ea5e9;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--color-surface-950);
+  color: #f1f5f9;
+}
+
+/* Fondo atmosférico compartido (misma familia cromática que la agenda) */
+@keyframes app-shell-bg-drift {
+  0% {
+    filter: hue-rotate(-6deg) saturate(1.05);
+    transform: scale(1);
+  }
+  100% {
+    filter: hue-rotate(10deg) saturate(1.12);
+    transform: scale(1.03);
+  }
+}
+
+.app-shell-bg {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 100% 80% at 10% -30%, rgba(52, 211, 153, 0.38), transparent 55%),
+    radial-gradient(ellipse 70% 60% at 95% 20%, rgba(56, 189, 248, 0.18), transparent 50%),
+    radial-gradient(circle at 50% 120%, rgba(16, 185, 129, 0.2), transparent 45%),
+    linear-gradient(168deg, #020617 0%, #064e3b 38%, #022c22 62%, #020617 100%);
+  animation: app-shell-bg-drift 18s ease-in-out infinite alternate;
+}
+
+.app-shell-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  background-image: url('https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1600&q=70');
+  background-size: cover;
+  background-position: 60% 40%;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell-bg {
+    animation: none;
+  }
+}

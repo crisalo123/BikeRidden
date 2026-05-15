@@ -1,0 +1,34 @@
+<section class="space-y-6">
+  <header>
+    <h1 class="font-display text-3xl font-bold text-white">Bicicletas</h1>
+    <p class="text-slate-400">Unidad vinculada al cliente: ideal para historial de servicios.</p>
+  </header>
+
+  <div class="overflow-hidden rounded-2xl border border-surface-700 bg-surface-900/50">
+    <table class="min-w-full divide-y divide-surface-700 text-left text-sm">
+      <thead class="bg-surface-950/80 text-xs uppercase tracking-wide text-slate-500">
+        <tr>
+          <th class="px-4 py-3 font-medium">Marca / modelo</th>
+          <th class="px-4 py-3 font-medium">Propietario</th>
+          <th class="px-4 py-3 font-medium">Tipo</th>
+          <th class="hidden px-4 py-3 font-medium lg:table-cell">Serie</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-surface-800">
+        @for (b of bikes(); track b.id) {
+          <tr class="text-slate-200 hover:bg-surface-800/40">
+            <td class="px-4 py-3">
+              <span class="font-medium text-white">{{ b.brand }}</span>
+              <span class="text-slate-400"> · {{ b.model }}</span>
+            </td>
+            <td class="px-4 py-3">{{ ownerName(b.customerId) }}</td>
+            <td class="px-4 py-3 text-slate-300">{{ categoryLabel(b.category) }}</td>
+            <td class="hidden px-4 py-3 font-mono text-xs text-slate-500 lg:table-cell">
+              {{ b.serialNumber ?? '—' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

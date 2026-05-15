@@ -1,0 +1,43 @@
+<section class="space-y-8">
+  <header>
+    <h1 class="font-display text-3xl font-bold text-white">Panel del taller</h1>
+    <p class="mt-2 max-w-2xl text-slate-400">
+      Vista rápida del flujo de órdenes, clientes y bicicletas. Esta base está preparada para conectar
+      después tu API o backend real.
+    </p>
+  </header>
+
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <article class="rounded-2xl border border-surface-700 bg-surface-900/60 p-5 shadow-lg shadow-black/20">
+      <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Órdenes activas</p>
+      <p class="mt-2 font-display text-3xl font-bold text-white">{{ openOrders() }}</p>
+      <p class="mt-1 text-xs text-brand-400">Incluye taller y espera de repuesto</p>
+    </article>
+    <article class="rounded-2xl border border-surface-700 bg-surface-900/60 p-5 shadow-lg shadow-black/20">
+      <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Listas para entrega</p>
+      <p class="mt-2 font-display text-3xl font-bold text-white">{{ readyToday() }}</p>
+      <p class="mt-1 text-xs text-slate-500">Avísale al cliente desde Órdenes</p>
+    </article>
+    <article class="rounded-2xl border border-surface-700 bg-surface-900/60 p-5 shadow-lg shadow-black/20">
+      <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Clientes</p>
+      <p class="mt-2 font-display text-3xl font-bold text-white">{{ customers() }}</p>
+      <p class="mt-1 text-xs text-slate-500">CRM ligero en Clientes</p>
+    </article>
+    <article class="rounded-2xl border border-surface-700 bg-surface-900/60 p-5 shadow-lg shadow-black/20">
+      <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Bicicletas registradas</p>
+      <p class="mt-2 font-display text-3xl font-bold text-white">{{ fleet() }}</p>
+      <p class="mt-1 text-xs text-slate-500">Historial por unidad</p>
+    </article>
+  </div>
+
+  @if (revenue().length) {
+    <app-workshop-revenue-charts [data]="revenue()" />
+  } @else {
+    <div
+      class="flex min-h-[12rem] items-center justify-center rounded-2xl border border-dashed border-surface-600 bg-surface-900/40"
+    >
+      <p class="text-sm text-slate-500">Cargando ingresos del taller…</p>
+    </div>
+  }
+
+</section>
