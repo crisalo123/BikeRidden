@@ -20,64 +20,168 @@
     <!-- Cliente -->
     <fieldset class="rounded-2xl border border-surface-700 bg-surface-900/50 p-6 shadow-lg shadow-black/20">
       <legend class="font-display text-lg font-semibold text-white">Cliente</legend>
+      <p class="mt-1 text-xs text-slate-500">
+        Indica si la persona ya está en el sistema o es la primera vez que ingresa al taller.
+      </p>
+
+      <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Tipo de cliente">
+        <button
+          type="button"
+          class="rounded-xl border px-4 py-2 text-sm font-medium transition"
+          [class.border-brand-500]="clientMode() === 'nuevo'"
+          [class.bg-brand-950]="clientMode() === 'nuevo'"
+          [class.text-brand-100]="clientMode() === 'nuevo'"
+          [class.border-surface-600]="clientMode() !== 'nuevo'"
+          [class.text-slate-300]="clientMode() !== 'nuevo'"
+          (click)="setClientMode('nuevo')"
+        >
+          Cliente nuevo
+        </button>
+        <button
+          type="button"
+          class="rounded-xl border px-4 py-2 text-sm font-medium transition"
+          [class.border-brand-500]="clientMode() === 'existente'"
+          [class.bg-brand-950]="clientMode() === 'existente'"
+          [class.text-brand-100]="clientMode() === 'existente'"
+          [class.border-surface-600]="clientMode() !== 'existente'"
+          [class.text-slate-300]="clientMode() !== 'existente'"
+          (click)="setClientMode('existente')"
+        >
+          Cliente existente
+        </button>
+      </div>
+
       <div class="mt-4 grid gap-4 sm:grid-cols-2">
         <div class="sm:col-span-2">
-          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="nm"
-            >Nombre completo</label
+          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="ced"
+            >Número de cédula</label
           >
-          <input
-            id="nm"
-            type="text"
-            formControlName="customerFullName"
-            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-            autocomplete="name"
-          />
-          @if (form.controls.customerFullName.touched && form.controls.customerFullName.invalid) {
-            <p class="mt-1 text-xs text-red-400">Indica al menos 2 caracteres.</p>
+          @if (clientMode() === 'existente') {
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <input
+                id="ced"
+                type="text"
+                inputmode="numeric"
+                formControlName="customerNationalId"
+                class="min-w-0 flex-1 rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 disabled:cursor-not-allowed disabled:opacity-60"
+                placeholder="Ej. 1020304050"
+                autocomplete="off"
+                [readonly]="isExistingCustomerLoaded()"
+              />
+              @if (!isExistingCustomerLoaded()) {
+                <button
+                  type="button"
+                  class="shrink-0 rounded-xl bg-brand-500 px-5 py-3 text-sm font-semibold text-surface-950 transition hover:brightness-110"
+                  (click)="lookupByNationalId()"
+                >
+                  Buscar cliente
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  class="shrink-0 rounded-xl border border-surface-600 px-5 py-3 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+                  (click)="clearExistingLookup()"
+                >
+                  Cambiar cédula
+                </button>
+              }
+            </div>
+          } @else {
+            <input
+              id="ced"
+              type="text"
+              inputmode="numeric"
+              formControlName="customerNationalId"
+              class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+              placeholder="Documento de identidad"
+              autocomplete="off"
+            />
+          }
+          @if (form.controls.customerNationalId.touched && form.controls.customerNationalId.invalid) {
+            <p class="mt-1 text-xs text-red-400">Indica la cédula (mín. 5 caracteres).</p>
+          }
+          @if (clientMode() === 'existente' && lookupMessage(); as lm) {
+            <p
+              class="mt-2 rounded-lg px-3 py-2 text-xs"
+              [class.bg-emerald-950]="lm.type === 'ok'"
+              [class.text-emerald-100]="lm.type === 'ok'"
+              [class.bg-red-950]="lm.type === 'err'"
+              [class.text-red-100]="lm.type === 'err'"
+              role="status"
+            >
+              {{ lm.text }}
+            </p>
           }
         </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="ph"
-            >Teléfono</label
-          >
-          <input
-            id="ph"
-            type="tel"
-            formControlName="customerPhone"
-            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-            autocomplete="tel"
-          />
-          @if (form.controls.customerPhone.touched && form.controls.customerPhone.invalid) {
-            <p class="mt-1 text-xs text-red-400">Teléfono obligatorio (mín. 8 dígitos/caracteres).</p>
-          }
-        </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="em"
-            >Correo (opcional)</label
-          >
-          <input
-            id="em"
-            type="email"
-            formControlName="customerEmail"
-            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-            autocomplete="email"
-          />
-          @if (form.controls.customerEmail.touched && form.controls.customerEmail.invalid) {
-            <p class="mt-1 text-xs text-red-400">Correo no válido.</p>
-          }
-        </div>
-        <div class="sm:col-span-2">
-          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="nt"
-            >Notas (opcional)</label
-          >
-          <textarea
-            id="nt"
-            rows="2"
-            formControlName="customerNotes"
-            class="w-full resize-y rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-            placeholder="Ej. horario preferido, alergias, urgencia…"
-          ></textarea>
-        </div>
+
+        @if (clientMode() === 'nuevo' || isExistingCustomerLoaded()) {
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="nm"
+              >Nombre completo</label
+            >
+            <input
+              id="nm"
+              type="text"
+              formControlName="customerFullName"
+              class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 disabled:cursor-not-allowed disabled:opacity-70"
+              autocomplete="name"
+              [readonly]="customerFieldsReadonly()"
+            />
+            @if (clientMode() === 'nuevo' && form.controls.customerFullName.touched && form.controls.customerFullName.invalid) {
+              <p class="mt-1 text-xs text-red-400">Indica al menos 2 caracteres.</p>
+            }
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="ph"
+              >Teléfono</label
+            >
+            <input
+              id="ph"
+              type="tel"
+              formControlName="customerPhone"
+              class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 disabled:cursor-not-allowed disabled:opacity-70"
+              autocomplete="tel"
+              [readonly]="customerFieldsReadonly()"
+            />
+            @if (clientMode() === 'nuevo' && form.controls.customerPhone.touched && form.controls.customerPhone.invalid) {
+              <p class="mt-1 text-xs text-red-400">Teléfono obligatorio (mín. 8 dígitos/caracteres).</p>
+            }
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="em"
+              >Correo (opcional)</label
+            >
+            <input
+              id="em"
+              type="email"
+              formControlName="customerEmail"
+              class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 disabled:cursor-not-allowed disabled:opacity-70"
+              autocomplete="email"
+              [readonly]="customerFieldsReadonly()"
+            />
+            @if (clientMode() === 'nuevo' && form.controls.customerEmail.touched && form.controls.customerEmail.invalid) {
+              <p class="mt-1 text-xs text-red-400">Correo no válido.</p>
+            }
+          </div>
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="nt"
+              >Notas (opcional)</label
+            >
+            <textarea
+              id="nt"
+              rows="2"
+              formControlName="customerNotes"
+              class="w-full resize-y rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 disabled:cursor-not-allowed disabled:opacity-70"
+              placeholder="Ej. horario preferido, alergias, urgencia…"
+              [readonly]="customerFieldsReadonly()"
+            ></textarea>
+          </div>
+        } @else {
+          <p class="sm:col-span-2 rounded-xl border border-dashed border-surface-600 bg-surface-950/50 px-4 py-3 text-sm text-slate-400">
+            Escribe la cédula y pulsa <span class="text-slate-200">Buscar cliente</span> para cargar nombre, teléfono y
+            correo.
+          </p>
+        }
       </div>
     </fieldset>
 
@@ -103,66 +207,160 @@
           <p class="mt-1 text-xs text-red-400">Indica quién recibe la unidad (mín. 2 caracteres).</p>
         }
       </div>
+      <div class="mt-4">
+        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="recv-obs">
+          Observaciones de cómo se recibe la bicicleta
+        </label>
+        <textarea
+          id="recv-obs"
+          rows="3"
+          formControlName="receptionObservations"
+          class="w-full resize-y rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+          placeholder="Ej. Rayón en cuadro derecho, sin luces, llanta trasera desinflada, cliente trae casco…"
+        ></textarea>
+        @if (form.controls.receptionObservations.touched && form.controls.receptionObservations.invalid) {
+          <p class="mt-1 text-xs text-red-400">Describe el estado al recibir la bicicleta (mín. 8 caracteres).</p>
+        }
+      </div>
     </fieldset>
 
     <!-- Bicicleta -->
     <fieldset class="rounded-2xl border border-surface-700 bg-surface-900/50 p-6 shadow-lg shadow-black/20">
       <legend class="font-display text-lg font-semibold text-white">Bicicleta</legend>
-      <div class="mt-4 grid gap-4 sm:grid-cols-2">
-        <div>
-          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="br"
-            >Marca</label
+
+      @if (canPickRegisteredBike()) {
+        <p class="mt-1 text-xs text-slate-500">
+          Este cliente ya tiene bicicletas en el sistema. Puedes reutilizar una o registrar una nueva.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Tipo de bicicleta">
+          <button
+            type="button"
+            class="rounded-xl border px-4 py-2 text-sm font-medium transition"
+            [class.border-brand-500]="bikeMode() === 'registrada'"
+            [class.bg-brand-950]="bikeMode() === 'registrada'"
+            [class.text-brand-100]="bikeMode() === 'registrada'"
+            [class.border-surface-600]="bikeMode() !== 'registrada'"
+            [class.text-slate-300]="bikeMode() !== 'registrada'"
+            (click)="setBikeMode('registrada')"
           >
-          <input
-            id="br"
-            type="text"
-            formControlName="bikeBrand"
-            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-          />
-          @if (form.controls.bikeBrand.touched && form.controls.bikeBrand.invalid) {
-            <p class="mt-1 text-xs text-red-400">Marca obligatoria.</p>
-          }
+            Bicicleta registrada
+          </button>
+          <button
+            type="button"
+            class="rounded-xl border px-4 py-2 text-sm font-medium transition"
+            [class.border-brand-500]="bikeMode() === 'nueva'"
+            [class.bg-brand-950]="bikeMode() === 'nueva'"
+            [class.text-brand-100]="bikeMode() === 'nueva'"
+            [class.border-surface-600]="bikeMode() !== 'nueva'"
+            [class.text-slate-300]="bikeMode() !== 'nueva'"
+            (click)="setBikeMode('nueva')"
+          >
+            Bicicleta nueva
+          </button>
         </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="md"
-            >Modelo</label
-          >
-          <input
-            id="md"
-            type="text"
-            formControlName="bikeModel"
-            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-          />
-          @if (form.controls.bikeModel.touched && form.controls.bikeModel.invalid) {
-            <p class="mt-1 text-xs text-red-400">Modelo obligatorio.</p>
-          }
-        </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="sn"
-            >N.º de serie (opcional)</label
-          >
-          <input
-            id="sn"
-            type="text"
-            formControlName="bikeSerial"
-            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-          />
-        </div>
-        <div>
-          <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="cat"
-            >Tipo</label
-          >
-          <select
-            id="cat"
-            formControlName="bikeCategory"
-            class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
-          >
-            @for (c of categories; track c.value) {
-              <option [value]="c.value">{{ c.label }}</option>
+
+        @if (bikeMode() === 'registrada') {
+          <ul class="mt-4 space-y-2" role="listbox" aria-label="Bicicletas del cliente">
+            @for (b of customerBikes(); track b.id) {
+              <li>
+                <button
+                  type="button"
+                  role="option"
+                  class="w-full rounded-xl border px-4 py-3 text-left transition"
+                  [attr.aria-selected]="selectedBikeId() === b.id"
+                  [class.border-brand-500]="selectedBikeId() === b.id"
+                  [class.bg-brand-950]="selectedBikeId() === b.id"
+                  [class.border-surface-600]="selectedBikeId() !== b.id"
+                  [class.bg-surface-950]="selectedBikeId() !== b.id"
+                  (click)="selectExistingBike(b.id)"
+                >
+                  <p class="text-sm font-semibold text-white">{{ b.brand }} {{ b.model }}</p>
+                  <p class="mt-0.5 text-xs text-slate-400">
+                    {{ categoryLabel(b.category) }}
+                    @if (b.serialNumber) {
+                      · Serie {{ b.serialNumber }}
+                    }
+                  </p>
+                </button>
+              </li>
             }
-          </select>
+          </ul>
+          @if (bikeSelectionError()) {
+            <p class="mt-2 text-xs text-red-400" role="alert">{{ bikeSelectionError() }}</p>
+          }
+        }
+      }
+
+      @if (bikeMode() === 'nueva' || !canPickRegisteredBike()) {
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="br"
+              >Marca</label
+            >
+            <input
+              id="br"
+              type="text"
+              formControlName="bikeBrand"
+              class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            />
+            @if (form.controls.bikeBrand.touched && form.controls.bikeBrand.invalid) {
+              <p class="mt-1 text-xs text-red-400">Marca obligatoria.</p>
+            }
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="md"
+              >Modelo</label
+            >
+            <input
+              id="md"
+              type="text"
+              formControlName="bikeModel"
+              class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            />
+            @if (form.controls.bikeModel.touched && form.controls.bikeModel.invalid) {
+              <p class="mt-1 text-xs text-red-400">Modelo obligatorio.</p>
+            }
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="sn"
+              >N.º de serie (opcional)</label
+            >
+            <input
+              id="sn"
+              type="text"
+              formControlName="bikeSerial"
+              class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="cat"
+              >Tipo</label
+            >
+            <select
+              id="cat"
+              formControlName="bikeCategory"
+              class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-3 text-sm text-white outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25"
+            >
+              @for (c of categories; track c.value) {
+                <option [value]="c.value">{{ c.label }}</option>
+              }
+            </select>
+          </div>
         </div>
-      </div>
+      } @else {
+        @if (selectedBike(); as bike) {
+          <div class="mt-4 rounded-xl border border-surface-600 bg-surface-950 px-4 py-3">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Unidad seleccionada</p>
+            <p class="mt-1 text-sm font-semibold text-white">{{ bike.brand }} {{ bike.model }}</p>
+            <p class="mt-0.5 text-xs text-slate-400">
+              {{ categoryLabel(bike.category) }}
+              @if (bike.serialNumber) {
+                · Serie {{ bike.serialNumber }}
+              }
+            </p>
+          </div>
+        }
+      }
     </fieldset>
 
     <!-- Proceso -->

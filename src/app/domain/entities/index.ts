@@ -1,4 +1,5 @@
 export * from './user.entity';
+export * from './mechanic.entity';
 export * from './customer.entity';
 export * from './bike.entity';
 export * from './work-order.entity';

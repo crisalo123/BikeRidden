@@ -3,6 +3,7 @@ import type { Bike, Customer, WorkOrder, WorkOrderStatusChange } from '@domain/e
 export const SAMPLE_CUSTOMERS: readonly Customer[] = [
   {
     id: 'c1',
+    nationalId: '1020304050',
     fullName: 'Laura Méndez',
     phone: '+52 55 1000 2233',
     email: 'laura.m@example.com',
@@ -12,6 +13,7 @@ export const SAMPLE_CUSTOMERS: readonly Customer[] = [
   },
   {
     id: 'c2',
+    nationalId: '8090706050',
     fullName: 'Diego Ríos',
     phone: '+52 55 9000 4411',
     email: 'diego.rios@example.com',
@@ -52,6 +54,8 @@ export const SAMPLE_WORK_ORDERS: readonly WorkOrder[] = [
     status: 'en_taller',
     summary: 'Servicio mayor + cambio de cadena',
     receivedByMechanicName: 'María Vega',
+    receptionObservations:
+      'Ingresa con barro en transmisión. Porta-bidón y bomba en el cuadro. Sin luces delanteras.',
     diagnosticNotes:
       'Cadena alargada (12 eslabones de elongación). Cassette 11-42 con dientes enganchados en piñón 32. ' +
       'Frenos con pastillas al 20% y discos con surcos leves. Se recomienda servicio mayor y sustitución de cadena y cassette.',
@@ -66,6 +70,7 @@ export const SAMPLE_WORK_ORDERS: readonly WorkOrder[] = [
     status: 'espera_repuesto',
     summary: 'Frenos hidráulicos — kit llega viernes',
     receivedByMechanicName: 'Carlos Ruiz',
+    receptionObservations: 'Frenos con ruido al apretar. Pastillas desgastadas visibles. Cuadro sin golpes.',
     openedAt: '2026-05-11',
   },
   {
@@ -76,6 +81,7 @@ export const SAMPLE_WORK_ORDERS: readonly WorkOrder[] = [
     status: 'listo',
     summary: 'Alineación y engrase',
     receivedByMechanicName: 'Ana López',
+    receptionObservations: 'Bici limpia. Cadena seca. Cliente pide solo engrase y revisión de frenos.',
     openedAt: '2026-05-09',
     estimatedReadyAt: '2026-05-12',
   },

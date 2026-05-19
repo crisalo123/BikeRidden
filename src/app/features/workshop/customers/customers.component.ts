@@ -15,6 +15,7 @@ export class CustomersComponent {
   readonly expandedId = signal<string | null>(null);
   readonly editingId = signal<string | null>(null);
 
+  editNationalId = '';
   editFullName = '';
   editPhone = '';
   editEmail = '';
@@ -27,6 +28,7 @@ export class CustomersComponent {
   startEdit(c: Customer, ev: Event): void {
     ev.stopPropagation();
     this.editingId.set(c.id);
+    this.editNationalId = c.nationalId;
     this.editFullName = c.fullName;
     this.editPhone = c.phone;
     this.editEmail = c.email === '(sin correo)' ? '' : c.email;
@@ -39,6 +41,7 @@ export class CustomersComponent {
 
   saveEdit(id: string): void {
     this.registry.updateCustomer(id, {
+      nationalId: this.editNationalId,
       fullName: this.editFullName,
       phone: this.editPhone,
       email: this.editEmail,

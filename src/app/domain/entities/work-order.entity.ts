@@ -15,6 +15,8 @@ export interface WorkOrder {
   readonly summary: string;
   /** Mecánico o recepcionista que recibió la bicicleta en el alta (recepción). */
   readonly receivedByMechanicName: string;
+  /** Observaciones al recibir la unidad (formulario de recepción). */
+  readonly receptionObservations?: string;
   /** Texto del diagnóstico técnico para entregar al cliente (exportable a PDF). */
   readonly diagnosticNotes?: string;
   readonly openedAt: string;

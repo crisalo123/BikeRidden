@@ -52,7 +52,7 @@
       </button>
     </div>
     <nav class="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-3">
-      @for (item of nav; track item.path) {
+      @for (item of nav(); track item.path) {
         <a
           [routerLink]="item.path"
           routerLinkActive="bg-surface-800 text-white ring-1 ring-brand-500/40"
@@ -113,7 +113,7 @@
       </div>
     </div>
     <nav class="flex flex-1 flex-col gap-1 px-3 py-4">
-      @for (item of nav; track item.path) {
+      @for (item of nav(); track item.path) {
         <a
           [routerLink]="item.path"
           routerLinkActive="bg-surface-800 text-white ring-1 ring-brand-500/40"

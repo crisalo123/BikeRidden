@@ -1,2 +1,5 @@
-# SPA (Angular): todas las rutas sirven index.html sin 404
+# Funciones serverless (WhatsApp, etc.)
+/.netlify/functions/*  /.netlify/functions/:splat  200
+
+# SPA (Angular): el resto de rutas sirven index.html
 /*    /index.html   200

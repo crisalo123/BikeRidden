@@ -6,6 +6,10 @@
 /out-tsc
 /bazel-out
 
+# Secrets (Green API, etc.)
+.env
+.env.local
+
 # Node
 /node_modules
 npm-debug.log

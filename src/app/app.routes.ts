@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from '@core/auth/admin.guard';
 import { authGuard } from '@core/auth/auth.guard';
 import { guestGuard } from '@core/auth/guest.guard';
 
@@ -57,6 +58,12 @@ export const routes: Routes = [
         path: 'bicicletas',
         loadComponent: () =>
           import('@features/workshop/bikes/bikes.component').then((m) => m.BikesComponent),
+      },
+      {
+        path: 'mecanicos',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('@features/workshop/mechanics/mechanics.component').then((m) => m.MechanicsComponent),
       },
       { path: 'segunda-mano', redirectTo: 'bodega', pathMatch: 'full' },
       {

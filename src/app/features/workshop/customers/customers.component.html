@@ -23,6 +23,7 @@
               {{ bikes(c.id).length }} bicis · {{ registry.workOrdersForCustomer(c.id).length }} órdenes
             </span>
           </div>
+          <p class="text-xs font-mono text-slate-500">Cédula {{ c.nationalId }}</p>
           <p class="text-sm text-slate-400">{{ c.email }}</p>
           <p class="text-sm text-brand-200">{{ c.phone }}</p>
           @if (c.notes) {
@@ -39,6 +40,18 @@
               <div class="rounded-xl border border-brand-500/30 bg-surface-950/60 p-4">
                 <h3 class="text-xs font-semibold uppercase tracking-wide text-brand-300">Editar cliente</h3>
                 <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="mb-1 block text-[10px] uppercase text-slate-500" for="eced-{{ c.id }}">
+                      Cédula
+                    </label>
+                    <input
+                      id="eced-{{ c.id }}"
+                      type="text"
+                      class="w-full rounded-lg border border-surface-600 bg-surface-900 px-3 py-2 text-sm text-white"
+                      [(ngModel)]="editNationalId"
+                      [ngModelOptions]="{ standalone: true }"
+                    />
+                  </div>
                   <div class="sm:col-span-2">
                     <label class="mb-1 block text-[10px] uppercase text-slate-500" for="efn-{{ c.id }}">Nombre</label>
                     <input

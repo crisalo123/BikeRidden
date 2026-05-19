@@ -1,0 +1,201 @@
+<section class="space-y-6">
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="font-display text-3xl font-bold text-white">Mecánicos y accesos</h1>
+      <p class="mt-2 max-w-2xl text-slate-400">
+        Administra el equipo del taller. Cada persona tiene correo y contraseña para ingresar a la aplicación.
+        Los mecánicos ven el tablero, órdenes y agenda; solo el administrador gestiona usuarios.
+      </p>
+    </div>
+    @if (!showForm()) {
+      <button
+        type="button"
+        class="shrink-0 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-surface-950 transition hover:brightness-110"
+        (click)="openCreate()"
+      >
+        + Nuevo usuario
+      </button>
+    }
+  </header>
+
+  @if (formSuccess()) {
+    <p class="rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-100" role="status">
+      {{ formSuccess() }}
+    </p>
+  }
+  @if (formError() && !showForm()) {
+    <p class="rounded-xl border border-red-500/35 bg-red-950/50 px-4 py-3 text-sm text-red-100" role="alert">
+      {{ formError() }}
+    </p>
+  }
+
+  @if (showForm()) {
+    <article class="rounded-2xl border border-brand-500/30 bg-surface-900/60 p-5">
+      <h2 class="font-display text-lg font-semibold text-white">
+        {{ editingId() ? 'Editar usuario' : 'Nuevo mecánico o administrador' }}
+      </h2>
+      <form class="mt-4 grid gap-4 sm:grid-cols-2" (ngSubmit)="save()" novalidate>
+        <div class="sm:col-span-2">
+          <label class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500" for="mech-name">
+            Nombre completo
+          </label>
+          <input
+            id="mech-name"
+            type="text"
+            required
+            class="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-white"
+            [(ngModel)]="fullName"
+            name="fullName"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500" for="mech-email">
+            Correo (usuario de acceso)
+          </label>
+          <input
+            id="mech-email"
+            type="email"
+            required
+            autocomplete="off"
+            class="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-white"
+            [(ngModel)]="email"
+            name="email"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500" for="mech-phone">
+            Teléfono (opcional)
+          </label>
+          <input
+            id="mech-phone"
+            type="tel"
+            class="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-white"
+            [(ngModel)]="phone"
+            name="phone"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500" for="mech-role">
+            Rol en la app
+          </label>
+          <select
+            id="mech-role"
+            class="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-white"
+            [(ngModel)]="role"
+            name="role"
+          >
+            <option value="mecanico">Mecánico</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500" for="mech-pwd">
+            {{ editingId() ? 'Nueva contraseña (opcional)' : 'Contraseña' }}
+          </label>
+          <input
+            id="mech-pwd"
+            type="password"
+            [required]="!editingId()"
+            autocomplete="new-password"
+            minlength="6"
+            class="w-full rounded-lg border border-surface-600 bg-surface-950 px-3 py-2 text-sm text-white"
+            [(ngModel)]="password"
+            name="password"
+            [placeholder]="editingId() ? 'Dejar vacío para no cambiar' : 'Mínimo 6 caracteres'"
+          />
+        </div>
+        @if (editingId()) {
+          <div class="flex items-center gap-2 sm:col-span-2">
+            <input
+              id="mech-active"
+              type="checkbox"
+              class="h-4 w-4 rounded border-surface-600 bg-surface-950 text-brand-500"
+              [(ngModel)]="active"
+              name="active"
+              [disabled]="isCurrentUser(editingId()!)"
+            />
+            <label for="mech-active" class="text-sm text-slate-300">Cuenta activa</label>
+            @if (isCurrentUser(editingId()!)) {
+              <span class="text-xs text-slate-500">(tu cuenta siempre queda activa)</span>
+            }
+          </div>
+        }
+        @if (formError()) {
+          <p class="sm:col-span-2 text-sm text-red-400" role="alert">{{ formError() }}</p>
+        }
+        <div class="flex flex-wrap gap-2 sm:col-span-2">
+          <button
+            type="submit"
+            class="rounded-xl bg-brand-500 px-4 py-2 text-sm font-semibold text-surface-950 hover:brightness-110"
+          >
+            {{ editingId() ? 'Guardar cambios' : 'Crear usuario' }}
+          </button>
+          <button
+            type="button"
+            class="rounded-xl border border-surface-600 px-4 py-2 text-sm text-slate-200 hover:border-slate-500"
+            (click)="cancelForm()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </article>
+  }
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    @for (m of mechanics(); track m.id) {
+      <article
+        class="rounded-2xl border border-surface-700 bg-surface-900/50 p-5"
+        [class.opacity-60]="!m.active"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <h2 class="font-display text-lg font-semibold text-white">{{ m.fullName }}</h2>
+          <span
+            class="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+            [class]="
+              m.role === 'admin'
+                ? 'bg-brand-500/20 text-brand-200'
+                : 'bg-surface-700 text-slate-300'
+            "
+          >
+            {{ roleLabel(m.role) }}
+          </span>
+        </div>
+        <p class="mt-1 font-mono text-sm text-slate-400">{{ m.email }}</p>
+        @if (m.phone) {
+          <p class="mt-1 text-sm text-brand-200">{{ m.phone }}</p>
+        }
+        <p class="mt-2 text-xs text-slate-500">
+          Contraseña configurada
+          <span class="text-slate-600">·</span>
+          {{ m.active ? 'Activo' : 'Inactivo' }}
+          @if (isCurrentUser(m.id)) {
+            <span class="text-brand-400"> · Tú</span>
+          }
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="rounded-lg border border-surface-600 px-3 py-1.5 text-xs text-slate-200 hover:border-brand-500/50 hover:text-brand-300"
+            (click)="startEdit(m)"
+          >
+            Editar
+          </button>
+          @if (!isCurrentUser(m.id)) {
+            <button
+              type="button"
+              class="rounded-lg border border-surface-600 px-3 py-1.5 text-xs text-slate-200 hover:border-amber-500/50 hover:text-amber-200"
+              (click)="toggleActive(m)"
+            >
+              {{ m.active ? 'Desactivar' : 'Activar' }}
+            </button>
+          }
+        </div>
+      </article>
+    }
+  </div>
+
+  <p class="text-xs text-slate-600">
+    Demo: maria.vega&#64;johanbikes.local / maria1234 · carlos.ruiz&#64;johanbikes.local / carlos1234
+  </p>
+</section>

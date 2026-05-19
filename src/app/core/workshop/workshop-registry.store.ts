@@ -16,6 +16,8 @@ import {
   SAMPLE_WORK_ORDERS,
   SAMPLE_WORK_ORDER_STATUS_HISTORY,
 } from '@features/workshop/data/workshop-sample.data';
+import { normalizeNationalId } from '@shared/workshop/national-id';
+import { buildWhatsAppSendUrl, workshopApprovalFooter } from '@shared/workshop/whatsapp-notify';
 import { workOrderStatusLabel } from '@shared/workshop/work-order-status';
 
 const CLIENT_NOTIFY_CHANNELS: readonly CustomerNotificationChannel[] = ['whatsapp', 'email', 'sms'];
@@ -71,6 +73,33 @@ export class WorkshopRegistryStore {
 
   customerName(id: string): string {
     return this._customers().find((c) => c.id === id)?.fullName ?? '—';
+  }
+
+  customerPhone(id: string): string {
+    return this._customers().find((c) => c.id === id)?.phone ?? '';
+  }
+
+  getCustomerNotification(notificationId: string): CustomerNotification | undefined {
+    return this._customerNotifications().find((n) => n.id === notificationId);
+  }
+
+  pendingClientNotificationForOrder(orderId: string): CustomerNotification | undefined {
+    return this._customerNotifications()
+      .filter((n) => n.workOrderId === orderId && n.requiresApproval && n.clientDecision === 'pendiente')
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  }
+
+  private withWhatsAppUrl(n: CustomerNotification, customerId: string): CustomerNotification {
+    const url = buildWhatsAppSendUrl(this.customerPhone(customerId), n.message);
+    return url ? { ...n, whatsappUrl: url } : n;
+  }
+
+  findCustomerByNationalId(nationalId: string): Customer | undefined {
+    const key = normalizeNationalId(nationalId);
+    if (!key) {
+      return undefined;
+    }
+    return this._customers().find((c) => normalizeNationalId(c.nationalId) === key);
   }
 
   bikeSummary(id: string): string {
@@ -162,7 +191,14 @@ export class WorkshopRegistryStore {
 
   updateCustomer(
     id: string,
-    patch: { fullName?: string; phone?: string; email?: string; notes?: string; avatarUrl?: string },
+    patch: {
+      nationalId?: string;
+      fullName?: string;
+      phone?: string;
+      email?: string;
+      notes?: string;
+      avatarUrl?: string;
+    },
   ): void {
     this._customers.update((list) => {
       const i = list.findIndex((c) => c.id === id);
@@ -170,6 +206,18 @@ export class WorkshopRegistryStore {
         return list;
       }
       const prev = list[i];
+      let nationalId = prev.nationalId;
+      if (patch.nationalId !== undefined) {
+        const nid = normalizeNationalId(patch.nationalId);
+        if (!nid) {
+          return list;
+        }
+        const taken = list.some((c) => c.id !== id && normalizeNationalId(c.nationalId) === nid);
+        if (taken) {
+          return list;
+        }
+        nationalId = nid;
+      }
       const fullName = (patch.fullName ?? prev.fullName).trim() || prev.fullName;
       const phone = (patch.phone ?? prev.phone).trim() || prev.phone;
       const emailInput = (patch.email ?? prev.email).trim();
@@ -193,6 +241,7 @@ export class WorkshopRegistryStore {
 
       const next: Customer = {
         id: prev.id,
+        nationalId,
         fullName,
         phone,
         email,
@@ -213,7 +262,11 @@ export class WorkshopRegistryStore {
   }
 
   /** Simula la respuesta del cliente desde el enlace o app de seguimiento. */
-  respondToCustomerNotification(notificationId: string, decision: 'aceptado' | 'rechazado'): void {
+  respondToCustomerNotification(
+    notificationId: string,
+    decision: 'aceptado' | 'rechazado',
+    options?: { registeredByWorkshop?: boolean },
+  ): void {
     this._customerNotifications.update((list) => {
       const i = list.findIndex((n) => n.id === notificationId);
       if (i === -1) {
@@ -223,12 +276,34 @@ export class WorkshopRegistryStore {
       if (!prev.requiresApproval || prev.clientDecision !== 'pendiente') {
         return list;
       }
+      const now = new Date().toISOString();
       const copy = [...list];
       copy[i] = {
         ...prev,
         clientDecision: decision,
-        decidedAt: new Date().toISOString(),
+        decidedAt: now,
+        ...(options?.registeredByWorkshop && decision === 'aceptado'
+          ? { approvedByWorkshopAt: now }
+          : {}),
       };
+      return copy;
+    });
+  }
+
+  /** El mecánico confirma que el cliente aprobó (presencial o por WhatsApp). */
+  markClientApprovedByWorkshop(notificationId: string): void {
+    this.respondToCustomerNotification(notificationId, 'aceptado', { registeredByWorkshop: true });
+  }
+
+  markWhatsAppSent(notificationId: string): void {
+    this._customerNotifications.update((list) => {
+      const i = list.findIndex((n) => n.id === notificationId);
+      if (i === -1) {
+        return list;
+      }
+      const prev = list[i];
+      const copy = [...list];
+      copy[i] = { ...prev, whatsappSentAt: new Date().toISOString() };
       return copy;
     });
   }
@@ -247,13 +322,15 @@ export class WorkshopRegistryStore {
     if (!order || !notes) {
       return false;
     }
-    const n = this.buildDiagnosticNotification(order, mechanic, notes);
+    const n = this.withWhatsAppUrl(this.buildDiagnosticNotification(order, mechanic, notes), order.customerId);
     this._customerNotifications.update((list) => [n, ...list]);
     return true;
   }
 
-  private appendCustomerNotification(n: CustomerNotification): void {
-    this._customerNotifications.update((list) => [n, ...list]);
+  private appendCustomerNotification(n: CustomerNotification): string {
+    const withUrl = this.withWhatsAppUrl(n, n.customerId);
+    this._customerNotifications.update((list) => [withUrl, ...list]);
+    return withUrl.id;
   }
 
   private buildDiagnosticNotification(order: WorkOrder, mechanicName: string, notes: string): CustomerNotification {
@@ -267,7 +344,8 @@ export class WorkshopRegistryStore {
       notes,
       '---',
       '',
-      'Por favor confirma si autorizas este plan de trabajo. Si rechazas, el taller te contactará para ajustar.',
+      'Por favor confirma si autorizas este plan de trabajo.',
+      workshopApprovalFooter(),
       '',
       `Registrado por: ${mechanicName}`,
     ].join('\n');
@@ -292,7 +370,7 @@ export class WorkshopRegistryStore {
     prev: WorkOrder,
     nextStatus: WorkOrderStatus,
     mechanicName: string,
-  ): void {
+  ): string {
     const fromLabel = workOrderStatusLabel(prev.status);
     const toLabel = workOrderStatusLabel(nextStatus);
     const customer = this.customerName(prev.customerId);
@@ -311,6 +389,7 @@ export class WorkshopRegistryStore {
         'Este monto es referencial hasta confirmar disponibilidad con el proveedor.',
         '',
         'Indica si aceptas o rechazas esta cotización para que el taller continúe.',
+        workshopApprovalFooter(),
         '',
         `Avance registrado por: ${mechanicName} (${fromLabel} → ${toLabel}).`,
       ].join('\n');
@@ -330,15 +409,14 @@ export class WorkshopRegistryStore {
         clientDecision: 'pendiente',
         quoteAmountCop: quoteCop,
       };
-      this.appendCustomerNotification(n);
-      return;
+      return this.appendCustomerNotification(n);
     }
 
     const title = `Actualización de tu orden ${prev.code}`;
     const message = [
       `Hola ${customer},`,
       '',
-      `Tu orden ${prev.code} (${bike}) cambió de estado.`,
+      `Tu orden ${prev.code} (${bike}) cambió de estado en el taller.`,
       '',
       `Estado anterior: ${fromLabel}.`,
       `Estado actual: ${toLabel}.`,
@@ -346,8 +424,7 @@ export class WorkshopRegistryStore {
       `Motivo / trabajo: ${prev.summary}`,
       '',
       `Registrado por: ${mechanicName}.`,
-      '',
-      'Si tienes dudas, responde por el mismo canal o llama al taller.',
+      workshopApprovalFooter(),
     ].join('\n');
 
     const kind: CustomerNotificationKind = 'cambio_estado';
@@ -362,10 +439,29 @@ export class WorkshopRegistryStore {
       channels: CLIENT_NOTIFY_CHANNELS,
       createdAt: new Date().toISOString(),
       mechanicName,
-      requiresApproval: false,
-      clientDecision: 'no_requerida',
+      requiresApproval: true,
+      clientDecision: 'pendiente',
     };
-    this.appendCustomerNotification(n);
+    return this.appendCustomerNotification(n);
+  }
+
+  updateWorkOrderReceptionObservations(orderId: string, receptionObservations: string): void {
+    this._workOrders.update((list) => {
+      const i = list.findIndex((o) => o.id === orderId);
+      if (i === -1) {
+        return list;
+      }
+      const copy = [...list];
+      const prev = copy[i];
+      const trimmed = receptionObservations.trim();
+      copy[i] = {
+        ...prev,
+        ...(trimmed.length === 0
+          ? { receptionObservations: undefined }
+          : { receptionObservations: trimmed }),
+      };
+      return copy;
+    });
   }
 
   updateWorkOrderDiagnostic(orderId: string, diagnosticNotes: string): void {
@@ -385,12 +481,31 @@ export class WorkshopRegistryStore {
     });
   }
 
-  updateWorkOrderStatus(orderId: string, status: WorkOrderStatus, mechanicName: string): void {
+  updateWorkOrderEstimatedReadyAt(orderId: string, estimatedReadyAt: string): void {
+    this._workOrders.update((list) => {
+      const i = list.findIndex((o) => o.id === orderId);
+      if (i === -1) {
+        return list;
+      }
+      const copy = [...list];
+      const prev = copy[i];
+      const trimmed = estimatedReadyAt.trim();
+      copy[i] = {
+        ...prev,
+        ...(trimmed.length === 0 ? { estimatedReadyAt: undefined } : { estimatedReadyAt: trimmed }),
+      };
+      return copy;
+    });
+  }
+
+  /** Devuelve el id de la notificación generada (para abrir WhatsApp), si hubo cambio de estado. */
+  updateWorkOrderStatus(orderId: string, status: WorkOrderStatus, mechanicName: string): string | undefined {
     const mechanic = mechanicName.trim();
     if (!mechanic) {
-      return;
+      return undefined;
     }
     let prevForNotify: WorkOrder | undefined;
+    let notificationId: string | undefined;
     this._workOrders.update((list) => {
       const i = list.findIndex((o) => o.id === orderId);
       if (i === -1) {
@@ -416,37 +531,68 @@ export class WorkshopRegistryStore {
       return copy;
     });
     if (prevForNotify && prevForNotify.status !== status) {
-      this.appendNotificationForStatusChange(prevForNotify, status, mechanic);
+      notificationId = this.appendNotificationForStatusChange(prevForNotify, status, mechanic);
     }
+    return notificationId;
   }
 
-  /** Registra cliente, bicicleta y OT en estado ingreso. Devuelve el código OT generado. */
+  /** Registra cliente (o reutiliza existente), bicicleta y OT en estado ingreso. Devuelve el código OT generado. */
   registerIntake(dto: IntakeRegistrationDto): string {
-    const customerId = crypto.randomUUID();
-    const bikeId = crypto.randomUUID();
+    const nationalId = normalizeNationalId(dto.customerNationalId);
+    if (!nationalId) {
+      throw new Error('Cédula inválida');
+    }
+
+    let customerId: string;
+    if (dto.existingCustomerId) {
+      const existing = this._customers().find((c) => c.id === dto.existingCustomerId);
+      if (!existing || normalizeNationalId(existing.nationalId) !== nationalId) {
+        throw new Error('Cliente no encontrado');
+      }
+      customerId = existing.id;
+    } else {
+      if (this.findCustomerByNationalId(nationalId)) {
+        throw new Error('Ya existe un cliente con esta cédula');
+      }
+      customerId = crypto.randomUUID();
+      const email = dto.customerEmail.trim();
+      const customer: Customer = {
+        id: customerId,
+        nationalId,
+        fullName: dto.customerFullName.trim(),
+        phone: dto.customerPhone.trim(),
+        email: email.length > 0 ? email : '(sin correo)',
+        ...(dto.customerNotes.trim() ? { notes: dto.customerNotes.trim() } : {}),
+      };
+      this._customers.update((list) => [customer, ...list]);
+    }
+
+    let bikeId: string;
+    if (dto.existingBikeId) {
+      const existingBike = this._bikes().find((b) => b.id === dto.existingBikeId);
+      if (!existingBike || existingBike.customerId !== customerId) {
+        throw new Error('Bicicleta no encontrada');
+      }
+      bikeId = existingBike.id;
+    } else {
+      bikeId = crypto.randomUUID();
+      const serial = dto.bikeSerial.trim();
+      const bike: Bike = {
+        id: bikeId,
+        customerId,
+        brand: dto.bikeBrand.trim(),
+        model: dto.bikeModel.trim(),
+        category: dto.bikeCategory,
+        ...(serial ? { serialNumber: serial } : {}),
+      };
+      this._bikes.update((list) => [bike, ...list]);
+    }
+
     const woId = crypto.randomUUID();
     const code = `OT-${this.nextOt++}`;
     const today = new Date().toISOString().slice(0, 10);
 
-    const email = dto.customerEmail.trim();
-    const customer: Customer = {
-      id: customerId,
-      fullName: dto.customerFullName.trim(),
-      phone: dto.customerPhone.trim(),
-      email: email.length > 0 ? email : '(sin correo)',
-      ...(dto.customerNotes.trim() ? { notes: dto.customerNotes.trim() } : {}),
-    };
-
-    const serial = dto.bikeSerial.trim();
-    const bike: Bike = {
-      id: bikeId,
-      customerId,
-      brand: dto.bikeBrand.trim(),
-      model: dto.bikeModel.trim(),
-      category: dto.bikeCategory,
-      ...(serial ? { serialNumber: serial } : {}),
-    };
-
+    const receptionObs = dto.receptionObservations.trim();
     const order: WorkOrder = {
       id: woId,
       code,
@@ -455,11 +601,10 @@ export class WorkshopRegistryStore {
       status: 'ingreso',
       summary: dto.processDescription.trim(),
       receivedByMechanicName: dto.receivedByMechanicName.trim(),
+      receptionObservations: receptionObs,
       openedAt: today,
     };
 
-    this._customers.update((list) => [customer, ...list]);
-    this._bikes.update((list) => [bike, ...list]);
     this._workOrders.update((list) => [order, ...list]);
 
     return code;

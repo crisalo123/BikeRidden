@@ -154,7 +154,9 @@
 
       <div class="mb-8 hidden lg:block">
         <h1 class="font-display text-2xl font-bold text-white">Bienvenido de vuelta</h1>
-        <p class="mt-2 text-sm text-slate-400">Entra con la cuenta demo o cambia los datos cuando quieras.</p>
+        <p class="mt-2 text-sm text-slate-400">
+          Usa el administrador demo o las cuentas de mecánico creadas en el módulo Mecánicos.
+        </p>
       </div>
 
       <form class="space-y-5" (ngSubmit)="submit()" [formGroup]="form" novalidate>
@@ -220,11 +222,12 @@
       <div
         class="mt-8 rounded-xl border border-brand-500/20 bg-brand-950/30 p-4 text-center text-xs leading-relaxed text-slate-300"
       >
-        <p class="font-medium text-brand-200">Acceso administrador (demo)</p>
+        <p class="font-medium text-brand-200">Cuentas demo</p>
         <p class="mt-2 font-mono text-[13px] text-white">
-          {{ demoEmail }}
-          <span class="text-slate-500">·</span>
-          demo1234
+          Admin: {{ demoEmail }} · demo1234
+        </p>
+        <p class="mt-1 font-mono text-[12px] text-slate-400">
+          Mecánico: maria.vega&#64;johanbikes.local · maria1234
         </p>
       </div>
     </div>

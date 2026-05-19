@@ -15,8 +15,7 @@
       role="status"
     >
       <span class="font-semibold text-amber-50">{{ pendingClientApprovalCount() }}</span>
-      aviso(s) esperan respuesta del cliente (cotización o plan / diagnóstico). Simula su respuesta en la lista de
-      abajo.
+      aviso(s) esperan aprobación del cliente por WhatsApp. Envía o reenvía el mensaje y registra la respuesta abajo.
     </div>
   }
 
@@ -25,9 +24,8 @@
       <h1 class="font-display text-3xl font-bold text-white">Órdenes de trabajo</h1>
       <p class="text-slate-400">
         Vista de lista; el estado se actualiza desde <span class="text-slate-300">Taller en vivo</span> arrastrando la
-        tarjeta entre columnas. Cada avance genera una <span class="text-slate-300">notificación al cliente</span>
-        (simulada). Las cotizaciones en repuestos y el diagnóstico enviado desde el tablero requieren que el cliente
-        <span class="text-slate-300">acepte o rechace</span> aquí hasta conectar tu API o proveedor de mensajes.
+        tarjeta entre columnas. Cada avance <span class="text-slate-300">envía WhatsApp</span> al cliente y queda pendiente
+        hasta que registres <span class="text-slate-300">«Aprobado por el cliente»</span> o indiques que no aprueba.
       </p>
     </div>
     <a
@@ -37,6 +35,35 @@
       + Nueva recepción
     </a>
   </header>
+
+  <div class="space-y-3">
+    <div class="flex flex-col gap-3 rounded-2xl border border-surface-700 bg-surface-900/50 p-4 sm:flex-row sm:items-end sm:justify-between">
+      <div class="min-w-0 flex-1">
+        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" for="order-search">
+          Buscar orden
+        </label>
+        <input
+          id="order-search"
+          type="search"
+          class="w-full rounded-xl border border-surface-600 bg-surface-950 px-4 py-2.5 text-sm text-white placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          placeholder="Código OT, cliente, resumen, estado, bicicleta…"
+          [value]="searchQuery()"
+          (input)="onSearchInput($event)"
+          autocomplete="off"
+        />
+      </div>
+      @if (searchQuery().trim()) {
+        <button
+          type="button"
+          class="shrink-0 rounded-xl border border-surface-600 px-4 py-2.5 text-sm text-slate-300 transition hover:border-slate-500 hover:text-white"
+          (click)="clearSearch()"
+        >
+          Limpiar
+        </button>
+      }
+    </div>
+    <p class="text-xs text-slate-500">{{ ordersListCaption() }}</p>
+  </div>
 
   <div class="overflow-hidden rounded-2xl border border-surface-700 bg-surface-900/50">
     <table class="min-w-full divide-y divide-surface-700 text-left text-sm">
@@ -51,7 +78,7 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-surface-800 text-slate-200">
-        @for (o of orders(); track o.id) {
+        @for (o of visibleOrders(); track o.id) {
           <tr class="hover:bg-surface-800/40">
             <td class="px-4 py-3 font-mono text-brand-300">{{ o.code }}</td>
             <td class="px-4 py-3">{{ customerName(o.customerId) }}</td>
@@ -72,6 +99,16 @@
               </button>
             </td>
           </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="px-4 py-10 text-center text-sm text-slate-500">
+              @if (searchQuery().trim()) {
+                No hay órdenes que coincidan con tu búsqueda.
+              } @else {
+                No hay órdenes registradas.
+              }
+            </td>
+          </tr>
         }
       </tbody>
     </table>
@@ -81,9 +118,10 @@
     <div>
       <h2 class="font-display text-xl font-semibold text-white">Notificaciones al cliente</h2>
       <p class="mt-1 max-w-3xl text-sm text-slate-400">
-        Registro de lo que se habría enviado por WhatsApp, correo y SMS. Los cambios de estado generan al menos un
-        aviso informativo; al pasar a <span class="text-slate-200">Repuestos</span> se adjunta una cotización orientativa
-        en COP que el cliente debe aceptar o rechazar.
+        Cada cambio de estado envía WhatsApp al cliente (API) con el contacto del taller
+        <span class="text-slate-200">{{ workshopWhatsApp.phoneDisplay }}</span>
+        ({{ workshopWhatsApp.businessName }}). Si el cliente no aprueba, debe escribir a ese número. Registra la
+        aprobación con el botón en el tablero o aquí abajo.
       </p>
     </div>
 
@@ -135,17 +173,31 @@
               <div class="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  class="rounded-lg border border-emerald-500/50 bg-emerald-500/15 px-4 py-2 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/25"
-                  (click)="respond(n.id, 'aceptado')"
+                  class="inline-flex rounded-lg border border-emerald-500/50 bg-emerald-500/15 px-4 py-2 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/25 disabled:opacity-50"
+                  [disabled]="isSendingWhatsApp(n.id)"
+                  (click)="sendWhatsApp(n.id)"
                 >
-                  Simular: cliente acepta
+                  @if (isSendingWhatsApp(n.id)) {
+                    Enviando…
+                  } @else if (n.whatsappSentAt) {
+                    Reenviar WhatsApp
+                  } @else {
+                    Enviar WhatsApp al cliente
+                  }
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg border border-brand-500/50 bg-brand-500/20 px-4 py-2 text-xs font-bold text-brand-50 transition hover:bg-brand-500/30"
+                  (click)="approveInWorkshop(n.id)"
+                >
+                  OK — Aprobado por el cliente
                 </button>
                 <button
                   type="button"
                   class="rounded-lg border border-rose-500/45 bg-rose-500/10 px-4 py-2 text-xs font-semibold text-rose-100 transition hover:bg-rose-500/20"
                   (click)="respond(n.id, 'rechazado')"
                 >
-                  Simular: cliente rechaza
+                  Cliente no aprueba
                 </button>
               </div>
             }

@@ -1,20 +1,23 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, delay, of, throwError } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import type { User, UserRole } from '@domain/entities';
+import { MechanicsStore } from '@core/workshop/mechanics.store';
 import type { LoginCredentials } from './login-credentials';
 
 const STORAGE_KEY = 'br_session_user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private readonly mechanics = inject(MechanicsStore);
+  private readonly router = inject(Router);
+
   private readonly userSignal = signal<User | null>(this.readStoredUser());
 
   readonly user = this.userSignal.asReadonly();
   readonly isAuthenticated = computed(() => this.userSignal() !== null);
-
-  constructor(private readonly router: Router) {}
+  readonly isAdmin = computed(() => this.userSignal()?.role === 'admin');
 
   login(credentials: LoginCredentials): Observable<User> {
     const user = this.validateCredentials(credentials);
@@ -22,7 +25,7 @@ export class AuthService {
       return throwError(() => new Error('Credenciales inválidas'));
     }
     return of(user).pipe(
-      delay(850),
+      delay(650),
       tap((u) => {
         this.userSignal.set(u);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
@@ -47,7 +50,7 @@ export class AuthService {
         localStorage.removeItem(STORAGE_KEY);
         return null;
       }
-      const role: UserRole = 'admin';
+      const role: UserRole = parsed.role === 'mecanico' ? 'mecanico' : 'admin';
       return {
         id: parsed.id,
         email: parsed.email,
@@ -61,16 +64,15 @@ export class AuthService {
   }
 
   private validateCredentials(credentials: LoginCredentials): User | null {
-    const email = credentials.email.trim().toLowerCase();
-    const pwd = credentials.password;
-    if (email === 'demo@bikeridden.app' && pwd === 'demo1234') {
-      return {
-        id: 'usr_admin',
-        email,
-        name: 'Administrador',
-        role: 'admin',
-      };
+    const mechanic = this.mechanics.authenticate(credentials.email, credentials.password);
+    if (!mechanic) {
+      return null;
     }
-    return null;
+    return {
+      id: mechanic.id,
+      email: mechanic.email.trim().toLowerCase(),
+      name: mechanic.fullName,
+      role: mechanic.role,
+    };
   }
 }

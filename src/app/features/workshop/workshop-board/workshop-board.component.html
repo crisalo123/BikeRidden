@@ -19,10 +19,10 @@
         Arrastra cada tarjeta a la <span class="text-slate-200">columna del estado</span> donde debe estar la orden
         (puedes saltar etapas si el flujo real lo exige: pago solo diagnóstico, se lleva la bici, etc.).
       </span>
-      El cambio se guarda en memoria y en el historial del cliente. Cada avance de columna
-      <span class="text-slate-200">notifica al cliente</span> (simulación por WhatsApp, correo y SMS). Para
-      <span class="text-slate-200">cambiar de columna</span> indica en cada tarjeta el mecánico que registra ese
-      avance (puede ser distinto en cada paso).
+      Al cambiar de columna se <span class="text-slate-200">envía WhatsApp automáticamente</span> al cliente (API del
+      taller {{ workshopWhatsApp.phoneDisplay }}). Si no aprueba, puede escribir al taller. Registra
+      <span class="text-slate-200">«OK — Aprobado por el cliente»</span> cuando confirme. Indica el mecánico en cada
+      avance.
     </p>
   </header>
 
@@ -56,8 +56,26 @@
                   {{ statusLabel(o.status) }}
                 </span>
               </div>
-              <p class="text-sm font-medium text-slate-100">{{ o.summary }}</p>
-              <p class="mt-2 text-xs text-slate-500">Desde {{ o.openedAt }}</p>
+              <p class="text-sm font-semibold text-white">{{ customerName(o.customerId) }}</p>
+              <p class="mt-0.5 text-[11px] text-slate-500">{{ bikeSummary(o.bikeId) }}</p>
+              <p class="mt-2 text-sm font-medium text-slate-200">{{ o.summary }}</p>
+              <p class="mt-1 text-xs text-slate-500">Ingreso {{ o.openedAt }}</p>
+              <div class="mt-2 space-y-1">
+                <label
+                  class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500"
+                  [attr.for]="'delivery-' + o.id"
+                >
+                  Fecha de entrega
+                </label>
+                <input
+                  [id]="'delivery-' + o.id"
+                  type="date"
+                  class="w-full rounded-lg border border-surface-600 bg-surface-900 px-2 py-1.5 text-xs text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  [value]="o.estimatedReadyAt ?? ''"
+                  (change)="onDeliveryDateChange(o.id, $event)"
+                />
+                <p class="text-[10px] text-slate-600">Se muestra en la agenda.</p>
+              </div>
               <div class="mt-2 space-y-1">
                 <label
                   class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500"
@@ -79,43 +97,99 @@
                   <p class="text-[10px] text-rose-400">Escribe el nombre del mecánico antes de mover la orden.</p>
                 }
               </div>
-              <div class="mt-3 space-y-2">
-                <label
-                  class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500"
-                  [attr.for]="'diag-notes-' + o.id"
-                >
-                  Diagnóstico (cliente / PDF)
-                </label>
-                <textarea
-                  [id]="'diag-notes-' + o.id"
-                  [name]="'diag-notes-' + o.id"
-                  rows="3"
-                  class="w-full resize-y rounded-lg border border-surface-600 bg-surface-900 px-2 py-2 text-xs text-slate-100 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                  placeholder="Describe hallazgos, repuestos sugeridos, riesgos…"
-                  [ngModel]="o.diagnosticNotes ?? ''"
-                  (ngModelChange)="onDiagnosticNotesChange(o.id, $event)"
-                  [ngModelOptions]="{ standalone: true }"
-                ></textarea>
-                <button
-                  type="button"
-                  class="w-full rounded-lg border border-surface-600 bg-surface-800/80 px-2 py-2 text-xs font-medium text-slate-200 transition hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-100"
-                  (click)="exportDiagnosticPdf(o.id)"
-                >
-                  Exportar diagnóstico PDF
-                </button>
-                <button
-                  type="button"
-                  class="w-full rounded-lg border border-brand-500/45 bg-brand-500/10 px-2 py-2 text-xs font-semibold text-brand-100 transition hover:bg-brand-500/20"
-                  (click)="sendDiagnosticToCustomer(o.id)"
-                >
-                  Enviar diagnóstico / plan al cliente
-                </button>
-                @if (diagnosticSendErrorOrderId() === o.id) {
-                  <p class="text-[10px] text-rose-400">
-                    Completa el diagnóstico y el nombre del mecánico antes de enviar, o revisa Órdenes si ya se envió.
+              @if (pendingClientNotify(o.id); as pending) {
+                <div class="mt-3 space-y-2 rounded-lg border border-amber-500/35 bg-amber-950/30 p-2.5">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-200">
+                    Esperando aprobación del cliente
                   </p>
-                }
-              </div>
+                  <p class="text-[10px] leading-snug text-amber-100/80">{{ pending.title }}</p>
+                  <button
+                    type="button"
+                    class="w-full rounded-lg border border-emerald-500/45 bg-emerald-500/15 px-2 py-2 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-500/25 disabled:opacity-50"
+                    [disabled]="isSendingWhatsApp(pending.id)"
+                    (click)="sendNotificationWhatsApp(pending.id)"
+                  >
+                    @if (isSendingWhatsApp(pending.id)) {
+                      Enviando WhatsApp…
+                    } @else if (pending.whatsappSentAt) {
+                      Reenviar WhatsApp al cliente
+                    } @else {
+                      Enviar WhatsApp al cliente
+                    }
+                  </button>
+                  <button
+                    type="button"
+                    class="w-full rounded-lg border border-brand-500/50 bg-brand-500/20 px-2 py-2 text-xs font-bold text-brand-50 transition hover:bg-brand-500/30"
+                    (click)="approveByClient(pending.id)"
+                  >
+                    OK — Aprobado por el cliente
+                  </button>
+                </div>
+              }
+              @if (col.status === 'ingreso') {
+                <div class="mt-3 space-y-2">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    Observaciones de recepción
+                  </p>
+                  <div class="rounded-lg border border-surface-700 bg-surface-900/80 px-2 py-2">
+                    @if (o.receptionObservations) {
+                      <p class="text-xs leading-relaxed text-slate-200">{{ o.receptionObservations }}</p>
+                    } @else {
+                      <p class="text-xs italic text-slate-500">Sin observaciones en el formulario de recepción.</p>
+                    }
+                  </div>
+                  <p class="text-[10px] text-slate-500">Recibida por {{ o.receivedByMechanicName }}</p>
+                  <p class="text-[10px] text-slate-600">
+                    Solo lectura. Al cambiar de estado podrás editar el diagnóstico técnico.
+                  </p>
+                </div>
+              } @else {
+                <div class="mt-3 space-y-2">
+                  <label
+                    class="block text-[10px] font-semibold uppercase tracking-wide text-slate-500"
+                    [attr.for]="'diag-notes-' + o.id"
+                  >
+                    Diagnóstico (cliente / PDF)
+                  </label>
+                  <textarea
+                    [id]="'diag-notes-' + o.id"
+                    [name]="'diag-notes-' + o.id"
+                    rows="3"
+                    class="w-full resize-y rounded-lg border border-surface-600 bg-surface-900 px-2 py-2 text-xs text-slate-100 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    placeholder="Describe hallazgos, repuestos sugeridos, riesgos…"
+                    [ngModel]="o.diagnosticNotes ?? ''"
+                    (ngModelChange)="onDiagnosticNotesChange(o.id, $event)"
+                    [ngModelOptions]="{ standalone: true }"
+                  ></textarea>
+                  @if (o.receptionObservations) {
+                    <div class="rounded-lg border border-surface-700 bg-surface-900/80 px-2 py-2">
+                      <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                        Observaciones de recepción
+                      </p>
+                      <p class="mt-1 text-[11px] leading-snug text-slate-400">{{ o.receptionObservations }}</p>
+                    </div>
+                  }
+                  <button
+                    type="button"
+                    class="w-full rounded-lg border border-surface-600 bg-surface-800/80 px-2 py-2 text-xs font-medium text-slate-200 transition hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-100"
+                    (click)="exportDiagnosticPdf(o.id)"
+                  >
+                    Exportar diagnóstico PDF
+                  </button>
+                  <button
+                    type="button"
+                    class="w-full rounded-lg border border-brand-500/45 bg-brand-500/10 px-2 py-2 text-xs font-semibold text-brand-100 transition hover:bg-brand-500/20"
+                    (click)="sendDiagnosticToCustomer(o.id)"
+                  >
+                    Enviar diagnóstico por WhatsApp al cliente
+                  </button>
+                  @if (diagnosticSendErrorOrderId() === o.id) {
+                    <p class="text-[10px] text-rose-400">
+                      Completa el diagnóstico y el nombre del mecánico antes de enviar, o revisa Órdenes si ya se envió.
+                    </p>
+                  }
+                </div>
+              }
               <div class="mt-3 md:hidden">
                 <label
                   class="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500"

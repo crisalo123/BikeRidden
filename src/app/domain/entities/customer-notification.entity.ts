@@ -20,6 +20,12 @@ export interface CustomerNotification {
   readonly requiresApproval: boolean;
   readonly clientDecision: ClientNotificationDecision;
   readonly decidedAt?: string;
+  /** Enlace wa.me listo para enviar el texto al teléfono del cliente. */
+  readonly whatsappUrl?: string;
+  /** Cuándo el taller abrió/envió el mensaje por WhatsApp. */
+  readonly whatsappSentAt?: string;
+  /** El mecánico registró en el sistema que el cliente aprobó (presencial o por chat). */
+  readonly approvedByWorkshopAt?: string;
   /** Importe orientativo en pesos COP (sin centavos), solo para cotizaciones. */
   readonly quoteAmountCop?: number;
 }
