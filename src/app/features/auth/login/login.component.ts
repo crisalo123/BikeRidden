@@ -37,7 +37,11 @@ export class LoginComponent {
       next: () => {
         this.submitting = false;
         const next = this.route.snapshot.queryParamMap.get('next');
-        const safe = next && next.startsWith('/') && !next.startsWith('//') ? next : '/app/panel';
+        const home = this.auth.appHomePath();
+        let safe = next && next.startsWith('/') && !next.startsWith('//') ? next : home;
+        if (!this.auth.isAdmin() && (safe === '/app/panel' || safe.startsWith('/app/panel/'))) {
+          safe = home;
+        }
         void this.router.navigateByUrl(safe);
       },
       error: () => {

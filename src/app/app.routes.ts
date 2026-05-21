@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from '@core/auth/admin.guard';
 import { authGuard } from '@core/auth/auth.guard';
+import { adminRoleMatch, mechanicRoleMatch } from '@core/auth/role-match.guard';
 import { guestGuard } from '@core/auth/guest.guard';
 
 export const routes: Routes = [
@@ -17,9 +18,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('@core/layout/main-layout.component').then((m) => m.MainLayoutComponent),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'panel' },
+      { path: '', pathMatch: 'full', redirectTo: 'panel', canMatch: [adminRoleMatch] },
+      { path: '', pathMatch: 'full', redirectTo: 'taller', canMatch: [mechanicRoleMatch] },
       {
         path: 'panel',
+        canActivate: [adminGuard],
         loadComponent: () =>
           import('@features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
       },

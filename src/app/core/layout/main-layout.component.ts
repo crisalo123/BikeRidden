@@ -38,12 +38,14 @@ export class MainLayoutComponent {
   constructor(readonly auth: AuthService) {}
 
   readonly nav = computed(() => {
-    if (!this.auth.isAdmin()) {
-      return [...BASE_NAV];
+    let items = this.auth.isAdmin()
+      ? [...BASE_NAV]
+      : BASE_NAV.filter((i) => i.path !== '/app/panel');
+    if (this.auth.isAdmin()) {
+      const bodegaIdx = items.findIndex((i) => i.path === '/app/bodega');
+      items = [...items];
+      items.splice(bodegaIdx, 0, ADMIN_NAV_ITEM);
     }
-    const items = [...BASE_NAV];
-    const bodegaIdx = items.findIndex((i) => i.path === '/app/bodega');
-    items.splice(bodegaIdx, 0, ADMIN_NAV_ITEM);
     return items;
   });
 

@@ -19,6 +19,9 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.userSignal() !== null);
   readonly isAdmin = computed(() => this.userSignal()?.role === 'admin');
 
+  /** Ruta de inicio según rol (mecánicos no usan el panel). */
+  readonly appHomePath = computed(() => (this.isAdmin() ? '/app/panel' : '/app/taller'));
+
   login(credentials: LoginCredentials): Observable<User> {
     const user = this.validateCredentials(credentials);
     if (!user) {
