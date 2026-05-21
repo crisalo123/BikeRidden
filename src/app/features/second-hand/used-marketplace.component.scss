@@ -2,8 +2,18 @@
   scroll-snap-type: x mandatory;
   scrollbar-width: thin;
   scrollbar-color: rgb(71 85 105) transparent;
+  -webkit-overflow-scrolling: touch;
 }
 
 .inventory-carousel__slide {
   scroll-snap-align: start;
+}
+
+.inventory-filter-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.inventory-filter-scroll::-webkit-scrollbar {
+  display: none;
 }

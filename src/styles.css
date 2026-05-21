@@ -84,3 +84,15 @@ body {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
+
+/* Móvil: espacio al final para ver botones y últimas filas (barra del navegador + safe area) */
+@media (max-width: 767px) {
+  .app-main-scroll {
+    padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem));
+    scroll-padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem));
+  }
+
+  .app-main-content {
+    padding-bottom: 0.5rem;
+  }
+}

@@ -1,5 +1,5 @@
 <div
-  class="flex min-h-screen w-full flex-row bg-surface-950 text-slate-100 max-md:h-[100dvh] max-md:max-h-[100dvh] max-md:overflow-hidden"
+  class="flex min-h-screen w-full flex-row bg-surface-950 text-slate-100 max-md:h-[100svh] max-md:max-h-[100svh] max-md:overflow-hidden"
 >
   <!-- Overlay móvil -->
   @if (mobileMenuOpen()) {
@@ -192,9 +192,11 @@
         Salir
       </button>
     </header>
-    <main class="app-main-scroll relative isolate min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8">
+    <main
+      class="app-main-scroll relative isolate min-h-0 flex-1 basis-0 overflow-y-auto overflow-x-hidden px-4 pt-4 md:p-8"
+    >
       <div class="app-shell-bg" aria-hidden="true"></div>
-      <div class="relative z-[1] min-h-0">
+      <div class="app-main-content relative z-[1] min-w-0">
         <router-outlet />
       </div>
     </main>

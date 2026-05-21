@@ -63,7 +63,7 @@ export class UsedMarketplaceComponent {
   }
 
   filterPillClass(kind: 'todos' | SecondHandListingKind): string {
-    const base = 'rounded-full px-3 py-1.5 text-xs font-medium transition ';
+    const base = 'shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ';
     const on = 'bg-brand-500/25 text-brand-100 ring-1 ring-brand-500/50 ';
     const off = 'bg-surface-800 text-slate-300 ';
     return base + (this.filterKind() === kind ? on : off);
