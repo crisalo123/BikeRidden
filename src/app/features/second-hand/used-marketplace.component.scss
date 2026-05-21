@@ -1,0 +1,9 @@
+.inventory-carousel {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(71 85 105) transparent;
+}
+
+.inventory-carousel__slide {
+  scroll-snap-align: start;
+}
